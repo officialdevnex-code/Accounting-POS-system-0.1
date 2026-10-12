@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Syed Ghina Ul Hassan · Ledger Accounting</title>
-  <!-- Bootstrap 5 + Icons + Google Font + Favicon -->
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230b1c2f'/%3E%3Ctext x='50' y='68' font-size='40' text-anchor='middle' fill='%2338bdf8' font-family='Inter, sans-serif' font-weight='700'%3ESGUH%3C/text%3E%3C/svg%3E">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -13,7 +12,6 @@
     * { font-family: 'Inter', sans-serif; }
     body { background: #e9eef3; padding-bottom: 3rem; }
 
-    /* ===== 3D LOADING SCREEN ===== */
     #loader-wrapper {
       position: fixed; inset: 0;
       background: linear-gradient(145deg, #0b1c2f 0%, #1a3a5c 100%);
@@ -54,7 +52,6 @@
     .loader-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #38bdf8, #818cf8, #f472b6); border-radius: 4px; animation: fillBar 9s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
     @keyframes fillBar { 0% { width: 0%; } 15% { width: 12%; } 40% { width: 38%; } 70% { width: 68%; } 100% { width: 100%; } }
 
-    /* ===== APP ===== */
     .card-header { font-weight: 600; letter-spacing: -0.01em; }
     .table-responsive { font-size: 0.82rem; }
     .table th { background: #f1f5f9; font-weight: 600; color: #0f172a; white-space: nowrap; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.02em; }
@@ -91,16 +88,29 @@
     .ledger-paper tbody tr:nth-child(even) { background: #f5faf5; }
     .fw-600 { font-weight: 600; }
     .developer-credit { color: #94a3b8; font-size: 0.75rem; letter-spacing: 0.05em; }
-    /* inventory styles */
     .inv-card { background: #ffffff; border-radius: 1rem; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
     .inv-low { background: #fee2e2; color: #991b1b; }
     .inv-ok { background: #dcfce7; color: #166534; }
     .auto-field { background-color: #f8fafc; }
+
+    .returns-card { background: #ffffff; border-radius: 1rem; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-left: 5px solid #f59e0b; }
+    .returns-header { background: #fffbeb; }
+    .return-badge { background: #fef3c7; color: #92400e; font-weight: 600; }
+    .total-col { background: #f0f9ff; font-weight: 700; color: #0369a1; }
+
+    @media (max-width: 768px) {
+      .brand-editable { width: 160px; font-size: 1rem; }
+      .summary-card .fs-4 { font-size: 1.1rem; }
+      .table-responsive { font-size: 0.75rem; }
+      .table th, .table td { font-size: 0.7rem; padding: 0.3rem 0.25rem; }
+      .sticky-col { position: sticky; left: 0; }
+      .master-ledger .sticky-col { background: #0b1c2f; }
+      .container-fluid { padding-left: 0.5rem; padding-right: 0.5rem; }
+    }
   </style>
 </head>
 <body>
 
-  <!-- ===== 3D LOADING SCREEN ===== -->
   <div id="loader-wrapper">
     <div class="loader-scene">
       <div class="loader-cube">
@@ -117,7 +127,6 @@
     <div class="loader-bar"><div class="loader-bar-fill"></div></div>
   </div>
 
-  <!-- NAVBAR with editable company name -->
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
     <div class="container-fluid px-4">
       <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="#">
@@ -134,7 +143,6 @@
 
   <div class="container-fluid px-4">
 
-    <!-- SUMMARY CARDS -->
     <div class="row g-3 mb-4">
       <div class="col-6 col-md-3">
         <div class="summary-card card h-100 border-0 shadow-sm" style="border-left-color: #0d6efd;">
@@ -190,7 +198,6 @@
       </div>
     </div>
 
-    <!-- ========== INVENTORY PURCHASE SECTION ========== -->
     <div class="card inv-card mb-4">
       <div class="card-header bg-white d-flex flex-wrap align-items-center gap-2 py-3 border-0">
         <i class="bi bi-box-seam text-primary fs-5"></i>
@@ -257,7 +264,6 @@
       </div>
     </div>
 
-    <!-- MASTER LEDGER ENTRY -->
     <div class="card master-entry-card mb-4">
       <div class="card-header bg-white d-flex flex-wrap align-items-center gap-2 py-3 border-0">
         <i class="bi bi-pencil-square text-primary fs-5"></i>
@@ -323,7 +329,6 @@
             <label class="form-label">Bank TID / Cheque #</label>
             <input type="text" class="form-control form-control-sm" id="bankTid" placeholder="Txn ID / Cheque">
           </div>
-          <!-- Material used & return -->
           <div class="col-md-2">
             <label class="form-label">Material Used <span class="text-muted fw-normal">(from inventory)</span></label>
             <select class="form-select form-select-sm" id="materialUsed">
@@ -349,7 +354,85 @@
       </div>
     </div>
 
-    <!-- MASTER LEDGER TABLE -->
+    <!-- ========== INDEPENDENT RETURNS SECTION ========== -->
+    <div class="card returns-card mb-4">
+      <div class="card-header returns-header d-flex flex-wrap align-items-center gap-2 py-3 border-0">
+        <i class="bi bi-arrow-return-left text-warning fs-5"></i>
+        <h5 class="mb-0 fw-semibold">Independent Returns Section</h5>
+        <span class="badge return-badge ms-2">Customer product returns → auto‑deduct from outstanding</span>
+        <span class="badge bg-info text-dark ms-auto"><i class="bi bi-currency-exchange"></i> PKR</span>
+      </div>
+      <div class="card-body pt-0">
+        <form id="returnsForm" class="row g-3 align-items-end">
+          <div class="col-md-3">
+            <label class="form-label">Customer Name</label>
+            <input type="text" class="form-control form-control-sm" id="returnCustomer" list="customerList" placeholder="Select or type customer" required>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Return Date</label>
+            <input type="date" class="form-control form-control-sm" id="returnDate" required>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Product / Particulars</label>
+            <input type="text" class="form-control form-control-sm" id="returnParticulars" placeholder="e.g. Rivet Big 15kg" required>
+          </div>
+          <div class="col-md-1">
+            <label class="form-label">Qty</label>
+            <input type="number" step="any" class="form-control form-control-sm" id="returnQtyInput" value="1" required>
+          </div>
+          <div class="col-md-1">
+            <label class="form-label">Unit</label>
+            <select class="form-select form-select-sm" id="returnUnit">
+              <option value="Kg">Kg</option>
+              <option value="Piece">Piece</option>
+            </select>
+          </div>
+          <div class="col-md-1">
+            <label class="form-label">Rate</label>
+            <input type="number" step="0.01" class="form-control form-control-sm" id="returnRate" value="0" required>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Return Amount</label>
+            <input type="text" class="form-control form-control-sm auto-field" id="returnAmount" readonly value="Rs 0.00">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Material (Inventory)</label>
+            <select class="form-select form-select-sm" id="returnMaterial">
+              <option value="">— none —</option>
+            </select>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Description</label>
+            <input type="text" class="form-control form-control-sm" id="returnDescription" placeholder="Optional details...">
+          </div>
+          <div class="col-md-2 d-flex align-items-end">
+            <button type="submit" class="btn btn-warning btn-sm w-100 text-dark fw-semibold"><i class="bi bi-arrow-return-left"></i> Submit Return</button>
+          </div>
+        </form>
+        <div class="mt-2 small text-muted"><i class="bi bi-info-circle"></i> Return amount is automatically deducted from the customer's outstanding balance in the Master Ledger. Inventory is restocked automatically.</div>
+
+        <div class="mt-3 table-responsive" style="max-height: 220px; overflow-y: auto;">
+          <table class="table table-sm table-bordered mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Date</th>
+                <th>Customer</th>
+                <th>Particulars</th>
+                <th>Qty</th>
+                <th>Unit</th>
+                <th>Rate</th>
+                <th>Return Amount</th>
+                <th>Material</th>
+                <th>Description</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="returnsTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
     <div class="card shadow-sm border-0 mb-5">
       <div class="card-header bg-white d-flex flex-wrap justify-content-between align-items-center py-3 border-0">
         <div><i class="bi bi-table text-primary me-2"></i><span class="fw-semibold">Master Ledger</span> <span class="badge bg-secondary ms-2" id="masterCount">0 entries</span></div>
@@ -370,6 +453,7 @@
                 <th>Qty</th>
                 <th>Unit</th>
                 <th>Rate</th>
+                <th>Total</th>
                 <th>Debit</th>
                 <th>Credit</th>
                 <th>Method</th>
@@ -388,7 +472,6 @@
       </div>
     </div>
 
-    <!-- CUSTOMER LEDGERS SECTION -->
     <div class="d-flex align-items-center gap-2 mb-3">
       <i class="bi bi-people-fill text-primary fs-4"></i>
       <h4 class="mb-0 fw-semibold">Customer Ledgers</h4>
@@ -398,25 +481,22 @@
 
   </div>
 
-  <!-- Footer with developer credit -->
   <footer class="text-center mt-5 pb-3">
     <span class="developer-credit">Development by Syed Ghina Ul Hassan · Ledger Accounting System</span>
   </footer>
 
-  <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-  <!-- SheetJS for Excel Export -->
   <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
 
   <script>
     (function() {
-      // ---------- DATA ----------
       let masterLedger = [];
       let inventory = [];
+      let returns = [];
       let currentId = 1;
       let invId = 1;
+      let returnId = 1;
 
-      // DOM refs
       const masterForm = document.getElementById('masterForm');
       const masterTableBody = document.getElementById('masterTableBody');
       const masterCount = document.getElementById('masterCount');
@@ -427,7 +507,6 @@
       const customerCountBadge = document.getElementById('customerCountBadge');
       const companyNameInput = document.getElementById('companyNameInput');
 
-      // inventory refs
       const inventoryForm = document.getElementById('inventoryForm');
       const inventoryTableBody = document.getElementById('inventoryTableBody');
       const invMaterial = document.getElementById('invMaterial');
@@ -438,7 +517,6 @@
       const invTotal = document.getElementById('invTotal');
       const invSupplier = document.getElementById('invSupplier');
 
-      // master fields
       const materialUsedSelect = document.getElementById('materialUsed');
       const returnQtyInput = document.getElementById('returnQty');
       const isReturnCheck = document.getElementById('isReturn');
@@ -447,13 +525,23 @@
       const debitInput = document.getElementById('debit');
       const creditInput = document.getElementById('credit');
 
-      // summary elements
+      const returnsForm = document.getElementById('returnsForm');
+      const returnsTableBody = document.getElementById('returnsTableBody');
+      const returnCustomer = document.getElementById('returnCustomer');
+      const returnDate = document.getElementById('returnDate');
+      const returnParticulars = document.getElementById('returnParticulars');
+      const returnQtyInputEl = document.getElementById('returnQtyInput');
+      const returnUnit = document.getElementById('returnUnit');
+      const returnRate = document.getElementById('returnRate');
+      const returnAmount = document.getElementById('returnAmount');
+      const returnMaterial = document.getElementById('returnMaterial');
+      const returnDescription = document.getElementById('returnDescription');
+
       const summarySales = document.getElementById('summarySales');
       const summaryPayments = document.getElementById('summaryPayments');
       const summaryOutstanding = document.getElementById('summaryOutstanding');
       const summaryProfit = document.getElementById('summaryProfit');
 
-      // ---------- HELPERS ----------
       function formatCurrency(num) {
         if (isNaN(num)) num = 0;
         return 'Rs ' + Number(num).toLocaleString('en-PK', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -474,8 +562,7 @@
         return companyNameInput.value.trim() || 'Syed Ghina Ul Hassan';
       }
 
-      // ---------- AUTO-CALCULATE DEBIT (FIX #1) ----------
-      // Sirf tab auto-fill karo jab Credit 0 ho (sale entry)
+      // ---------- AUTO-CALCULATE DEBIT ----------
       function autoCalculateDebit() {
         const qty = parseFloat(qtyInput.value) || 0;
         const rate = parseFloat(rateInput.value) || 0;
@@ -490,13 +577,21 @@
       qtyInput.addEventListener('input', autoCalculateDebit);
       rateInput.addEventListener('input', autoCalculateDebit);
 
-      // FIX #1: Credit enter hone par debit ko 0 kar do (payment entry)
       creditInput.addEventListener('input', () => {
         const creditVal = parseFloat(creditInput.value) || 0;
         if (creditVal > 0) {
           debitInput.value = '0';
         }
       });
+
+      // ---------- RETURNS: auto amount ----------
+      function calcReturnAmount() {
+        const q = parseFloat(returnQtyInputEl.value) || 0;
+        const r = parseFloat(returnRate.value) || 0;
+        returnAmount.value = formatCurrency(q * r);
+      }
+      returnQtyInputEl.addEventListener('input', calcReturnAmount);
+      returnRate.addEventListener('input', calcReturnAmount);
 
       // ---------- INVENTORY LOGIC ----------
       function renderInventory() {
@@ -532,30 +627,17 @@
         });
       }
 
-      // FIX #2: Return logic mein FIFO loop (matching inventory items update honge)
+      // FIX: Returns se inventory add-back handle karo (returns array se, masterLedger se nahi)
       function syncInventoryFromLedger() {
         // Reset remaining to original purchased qty
         inventory.forEach(inv => {
           inv.remaining = inv.qty;
         });
 
+        // Deduct from sales entries in masterLedger (only non-return entries)
         masterLedger.forEach(t => {
-          if (t.materialUsed && t.materialUsed !== '') {
+          if (t.materialUsed && t.materialUsed !== '' && !t.isReturn) {
             const matName = t.materialUsed;
-
-            // RETURN: add back stock (FIFO reverse — last matching purchase pe add)
-            if (t.isReturn && t.returnQty > 0) {
-              let addBack = t.returnQty;
-              for (let i = inventory.length - 1; i >= 0 && addBack > 0; i--) {
-                if (inventory[i].material === matName) {
-                  inventory[i].remaining += addBack;
-                  addBack = 0;
-                }
-              }
-              return;
-            }
-
-            // NORMAL SALE: FIFO deduction from oldest matching purchases
             let needed = t.qty;
             for (let inv of inventory) {
               if (inv.material === matName && inv.remaining > 0 && needed > 0) {
@@ -566,9 +648,22 @@
             }
           }
         });
+
+        // Add back from returns array
+        returns.forEach(r => {
+          if (r.material && r.material !== '') {
+            const matName = r.material;
+            let addBack = r.qty;
+            for (let i = inventory.length - 1; i >= 0 && addBack > 0; i--) {
+              if (inventory[i].material === matName) {
+                inventory[i].remaining += addBack;
+                addBack = 0;
+              }
+            }
+          }
+        });
       }
 
-      // add inventory purchase
       inventoryForm.addEventListener('submit', (e) => {
         e.preventDefault();
         const material = invMaterial.value.trim();
@@ -611,8 +706,10 @@
 
       function populateMaterialSelect() {
         const materials = [...new Set(inventory.map(i => i.material))];
-        materialUsedSelect.innerHTML = '<option value="">— none —</option>' +
+        const options = '<option value="">— none —</option>' +
           materials.map(m => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('');
+        materialUsedSelect.innerHTML = options;
+        returnMaterial.innerHTML = options;
       }
 
       // ---------- MASTER LEDGER ----------
@@ -638,7 +735,6 @@
         });
       }
 
-      // ---------- RENDER MASTER TABLE WITH TOTAL ROW ----------
       function renderMasterTable() {
         computeCustomerRunningBalances();
         const filterText = masterFilter.value.trim().toLowerCase();
@@ -665,6 +761,18 @@
           totalCredit += (t.credit || 0);
           totalProfit += profit;
 
+          // FIX: Total column — payment entries ke liye "—" dikhao
+          let totalColDisplay = '—';
+          if (t.isReturn) {
+            totalColDisplay = '—';
+          } else if ((t.debit || 0) > 0 && (t.credit || 0) === 0) {
+            totalColDisplay = formatCurrency((t.qty || 0) * (t.rate || 0));
+          } else if ((t.credit || 0) > 0 && (t.debit || 0) === 0) {
+            totalColDisplay = '—';
+          } else if ((t.qty || 0) > 0 && (t.rate || 0) > 0) {
+            totalColDisplay = formatCurrency((t.qty || 0) * (t.rate || 0));
+          }
+
           let methodBadge = '';
           if (t.paymentMethod === 'Cash') methodBadge = '<span class="badge badge-cash">Cash</span>';
           else if (t.paymentMethod === 'Bank') methodBadge = '<span class="badge badge-bank">Bank</span>';
@@ -680,6 +788,7 @@
             <td>${t.qty}</td>
             <td>${t.unit}</td>
             <td>${formatCurrency(t.rate)}</td>
+            <td class="total-col">${totalColDisplay}</td>
             <td>${formatCurrency(t.debit)}</td>
             <td>${formatCurrency(t.credit)}</td>
             <td>${methodBadge}</td>
@@ -692,13 +801,13 @@
           </tr>`;
         });
 
-        // *** TOTAL ROW (FIX #3) ***
         html += `<tr class="table-secondary fw-bold" style="border-top: 2px solid #0b1c2f;">
           <td class="sticky-col">TOTAL</td>
           <td colspan="6"></td>
+          <td></td>
           <td>${formatCurrency(totalDebit)}</td>
           <td>${formatCurrency(totalCredit)}</td>
-          <td colspan="5"></td>
+          <td colspan="4"></td>
           <td class="${totalProfit >= 0 ? 'profit-positive' : 'profit-negative'}">${formatCurrency(totalProfit)}</td>
           <td colspan="2"></td>
         </tr>`;
@@ -710,7 +819,46 @@
           btn.addEventListener('click', (e) => {
             const id = Number(btn.dataset.id);
             if (confirm('Delete this transaction? Customer ledger & inventory will update.')) {
+              // FIX: Agar return entry hai to Returns Section se bhi delete karo
+              const txn = masterLedger.find(t => t.id === id);
+              if (txn && txn.isReturn && txn.returnId) {
+                returns = returns.filter(r => r.id !== txn.returnId);
+              }
               masterLedger = masterLedger.filter(t => t.id !== id);
+              syncInventoryFromLedger();
+              refreshAll();
+            }
+          });
+        });
+      }
+
+      function renderReturnsTable() {
+        if (returns.length === 0) {
+          returnsTableBody.innerHTML = '<tr><td colspan="10" class="text-center text-muted py-3">No returns recorded yet.</td></tr>';
+          return;
+        }
+        let html = '';
+        returns.forEach(r => {
+          html += `<tr>
+            <td>${r.date}</td>
+            <td>${escapeHtml(r.customer)}</td>
+            <td>${escapeHtml(r.particulars)}</td>
+            <td>${r.qty}</td>
+            <td>${r.unit}</td>
+            <td>${formatCurrency(r.rate)}</td>
+            <td class="fw-bold text-danger">${formatCurrency(r.amount)}</td>
+            <td>${escapeHtml(r.material || '—')}</td>
+            <td class="desc-col" title="${escapeHtml(r.description || '')}">${escapeHtml(r.description || '—')}</td>
+            <td><button class="btn btn-outline-danger btn-sm btn-sm-icon delete-return" data-id="${r.id}"><i class="bi bi-trash"></i></button></td>
+          </tr>`;
+        });
+        returnsTableBody.innerHTML = html;
+        document.querySelectorAll('.delete-return').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const id = Number(btn.dataset.id);
+            if (confirm('Delete this return? Ledger & inventory will be recalculated.')) {
+              returns = returns.filter(r => r.id !== id);
+              masterLedger = masterLedger.filter(t => !(t.isReturn && t.returnId === id));
               syncInventoryFromLedger();
               refreshAll();
             }
@@ -762,7 +910,7 @@
                 <div class="table-responsive" style="max-height: 280px; overflow-y: auto;">
                   <table class="table table-sm table-bordered mb-0 ledger-paper">
                     <thead class="sticky-top">
-                      <tr><th>Date</th><th>Particulars</th><th>Description</th><th>Qty</th><th>Unit</th><th>Rate</th><th>Debit</th><th>Credit</th><th>Method</th><th>Bank TID</th><th>Running</th></tr>
+                      <tr><th>Date</th><th>Particulars</th><th>Description</th><th>Qty</th><th>Unit</th><th>Rate</th><th>Total</th><th>Debit</th><th>Credit</th><th>Method</th><th>Bank TID</th><th>Running</th></tr>
                     </thead>
                     <tbody>`;
           txns.forEach(t => {
@@ -771,6 +919,18 @@
             if (t.paymentMethod === 'Cash') methodBadge = '<span class="badge badge-cash">Cash</span>';
             else if (t.paymentMethod === 'Bank') methodBadge = '<span class="badge badge-bank">Bank</span>';
             else methodBadge = '<span class="badge badge-cheque">Cheque</span>';
+
+            let totalColDisplay = '—';
+            if (t.isReturn) {
+              totalColDisplay = '—';
+            } else if ((t.debit || 0) > 0 && (t.credit || 0) === 0) {
+              totalColDisplay = formatCurrency((t.qty || 0) * (t.rate || 0));
+            } else if ((t.credit || 0) > 0 && (t.debit || 0) === 0) {
+              totalColDisplay = '—';
+            } else if ((t.qty || 0) > 0 && (t.rate || 0) > 0) {
+              totalColDisplay = formatCurrency((t.qty || 0) * (t.rate || 0));
+            }
+
             html += `<tr>
               <td>${t.date}</td>
               <td>${escapeHtml(t.particulars)}</td>
@@ -778,6 +938,7 @@
               <td>${t.qty}</td>
               <td>${t.unit}</td>
               <td>${formatCurrency(t.rate)}</td>
+              <td class="total-col">${totalColDisplay}</td>
               <td>${formatCurrency(t.debit)}</td>
               <td>${formatCurrency(t.credit)}</td>
               <td>${methodBadge}</td>
@@ -790,14 +951,19 @@
         customerLedgersContainer.innerHTML = html;
       }
 
+      // FIX: Summary cards — returns ko payments se alag karo
       function updateSummaryCards() {
-        let totalSales = 0, totalPayments = 0, totalProfit = 0;
+        let totalSales = 0, totalPayments = 0, totalProfit = 0, totalReturns = 0;
         masterLedger.forEach(t => {
-          totalSales += (t.debit || 0);
-          totalPayments += (t.credit || 0);
+          if (t.isReturn) {
+            totalReturns += (t.credit || 0);
+          } else {
+            totalSales += (t.debit || 0);
+            totalPayments += (t.credit || 0);
+          }
           totalProfit += ((t.profitPerUnit || 0) * (t.qty || 0));
         });
-        const outstanding = totalSales - totalPayments;
+        const outstanding = totalSales - totalPayments - totalReturns;
         summarySales.textContent = formatCurrency(totalSales);
         summaryPayments.textContent = formatCurrency(totalPayments);
         summaryOutstanding.textContent = formatCurrency(outstanding);
@@ -811,6 +977,7 @@
 
       function refreshAll() {
         renderMasterTable();
+        renderReturnsTable();
         renderCustomerLedgers();
         updateSummaryCards();
         updateCustomerDatalist();
@@ -818,33 +985,46 @@
         renderInventory();
       }
 
-      // ---------- EXCEL EXPORT (with totals) ----------
+      // ---------- EXCEL EXPORT ----------
       function exportToExcel() {
-        if (masterLedger.length === 0 && inventory.length === 0) {
+        if (masterLedger.length === 0 && inventory.length === 0 && returns.length === 0) {
           alert('No data to export.');
           return;
         }
         const company = getCompanyName();
 
-        const masterRows = masterLedger.map((t, i) => ({
-          'S.No': i + 1,
-          'Customer': t.customer,
-          'Date': t.date,
-          'Particulars': t.particulars,
-          'Description': t.description || '',
-          'Qty': t.qty,
-          'Unit': t.unit,
-          'Rate (Rs)': t.rate,
-          'Debit (Rs)': t.debit,
-          'Credit (Rs)': t.credit,
-          'Payment Method': t.paymentMethod,
-          'Bank TID': t.bankTid || '',
-          'Material Used': t.materialUsed || '',
-          'Return Qty': t.returnQty || 0,
-          'Is Return': t.isReturn ? 'Yes' : 'No',
-          'Profit (Rs)': (t.profitPerUnit || 0) * (t.qty || 0),
-          'Running Balance (Rs)': t.runningBalance || 0
-        }));
+        const masterRows = masterLedger.map((t, i) => {
+          let totalCol = 0;
+          if (t.isReturn) {
+            totalCol = 0;
+          } else if ((t.debit || 0) > 0 && (t.credit || 0) === 0) {
+            totalCol = (t.qty || 0) * (t.rate || 0);
+          } else if ((t.credit || 0) > 0 && (t.debit || 0) === 0) {
+            totalCol = 0;
+          } else {
+            totalCol = (t.qty || 0) * (t.rate || 0);
+          }
+          return {
+            'S.No': i + 1,
+            'Customer': t.customer,
+            'Date': t.date,
+            'Particulars': t.particulars,
+            'Description': t.description || '',
+            'Qty': t.qty,
+            'Unit': t.unit,
+            'Rate (Rs)': t.rate,
+            'Total (Rs)': totalCol,
+            'Debit (Rs)': t.debit,
+            'Credit (Rs)': t.credit,
+            'Payment Method': t.paymentMethod,
+            'Bank TID': t.bankTid || '',
+            'Material Used': t.materialUsed || '',
+            'Return Qty': t.returnQty || 0,
+            'Is Return': t.isReturn ? 'Yes' : 'No',
+            'Profit (Rs)': (t.profitPerUnit || 0) * (t.qty || 0),
+            'Running Balance (Rs)': t.runningBalance || 0
+          };
+        });
 
         const inventoryRows = inventory.map((inv, i) => ({
           'S.No': i + 1,
@@ -858,19 +1038,39 @@
           'Remaining': inv.remaining
         }));
 
-        let totalSales = 0, totalPayments = 0, totalProfit = 0;
+        const returnRows = returns.map((r, i) => ({
+          'S.No': i + 1,
+          'Customer': r.customer,
+          'Date': r.date,
+          'Particulars': r.particulars,
+          'Qty': r.qty,
+          'Unit': r.unit,
+          'Rate (Rs)': r.rate,
+          'Return Amount (Rs)': r.amount,
+          'Material': r.material || '',
+          'Description': r.description || ''
+        }));
+
+        let totalSales = 0, totalPayments = 0, totalProfit = 0, totalReturns = 0;
         masterLedger.forEach(t => {
-          totalSales += (t.debit || 0);
-          totalPayments += (t.credit || 0);
+          if (t.isReturn) {
+            totalReturns += (t.credit || 0);
+          } else {
+            totalSales += (t.debit || 0);
+            totalPayments += (t.credit || 0);
+          }
           totalProfit += ((t.profitPerUnit || 0) * (t.qty || 0));
         });
+
         const summaryRows = [
           { 'Metric': 'Company', 'Value': company },
           { 'Metric': 'Total Sales (Rs)', 'Value': totalSales },
           { 'Metric': 'Total Payments Received (Rs)', 'Value': totalPayments },
-          { 'Metric': 'Outstanding (Rs)', 'Value': totalSales - totalPayments },
+          { 'Metric': 'Total Returns (Rs)', 'Value': totalReturns },
+          { 'Metric': 'Outstanding (Rs)', 'Value': totalSales - totalPayments - totalReturns },
           { 'Metric': 'Total Profit (Rs)', 'Value': totalProfit },
           { 'Metric': 'Total Transactions', 'Value': masterLedger.length },
+          { 'Metric': 'Total Returns Count', 'Value': returns.length },
           { 'Metric': 'Export Date', 'Value': new Date().toLocaleString('en-PK') }
         ];
 
@@ -878,14 +1078,17 @@
         const ws1 = XLSX.utils.json_to_sheet(masterRows);
         const ws2 = XLSX.utils.json_to_sheet(summaryRows);
         const ws3 = XLSX.utils.json_to_sheet(inventoryRows);
+        const ws4 = XLSX.utils.json_to_sheet(returnRows);
 
-        ws1['!cols'] = [{ wch: 6 }, { wch: 20 }, { wch: 12 }, { wch: 22 }, { wch: 24 }, { wch: 6 }, { wch: 6 }, { wch: 10 }, { wch: 12 }, { wch: 12 }, { wch: 10 }, { wch: 16 }, { wch: 16 }, { wch: 10 }, { wch: 10 }, { wch: 12 }, { wch: 16 }];
+        ws1['!cols'] = [{ wch: 6 }, { wch: 20 }, { wch: 12 }, { wch: 22 }, { wch: 24 }, { wch: 6 }, { wch: 6 }, { wch: 10 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 10 }, { wch: 16 }, { wch: 16 }, { wch: 10 }, { wch: 10 }, { wch: 12 }, { wch: 16 }];
         ws2['!cols'] = [{ wch: 30 }, { wch: 24 }];
         ws3['!cols'] = [{ wch: 6 }, { wch: 20 }, { wch: 12 }, { wch: 14 }, { wch: 8 }, { wch: 10 }, { wch: 12 }, { wch: 18 }, { wch: 12 }];
+        ws4['!cols'] = [{ wch: 6 }, { wch: 20 }, { wch: 12 }, { wch: 22 }, { wch: 6 }, { wch: 6 }, { wch: 10 }, { wch: 16 }, { wch: 16 }, { wch: 24 }];
 
         XLSX.utils.book_append_sheet(wb, ws1, 'Master Ledger');
         XLSX.utils.book_append_sheet(wb, ws2, 'Summary');
         XLSX.utils.book_append_sheet(wb, ws3, 'Inventory');
+        XLSX.utils.book_append_sheet(wb, ws4, 'Returns');
 
         const fileName = company.replace(/\s+/g, '_') + '_Ledger_' + new Date().toISOString().slice(0,10) + '.xlsx';
         XLSX.writeFile(wb, fileName);
@@ -945,6 +1148,66 @@
         isReturnCheck.checked = false;
       });
 
+      // ---------- RETURNS SUBMIT ----------
+      returnsForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const customer = returnCustomer.value.trim();
+        if (!customer) { alert('Customer name is required'); return; }
+        const qty = parseFloat(returnQtyInputEl.value) || 0;
+        const rate = parseFloat(returnRate.value) || 0;
+        const amount = qty * rate;
+        if (amount <= 0) { alert('Return amount must be greater than 0'); return; }
+
+        const ret = {
+          id: returnId++,
+          customer: customer,
+          date: returnDate.value,
+          particulars: returnParticulars.value.trim(),
+          qty: qty,
+          unit: returnUnit.value,
+          rate: rate,
+          amount: amount,
+          material: returnMaterial.value,
+          description: returnDescription.value.trim()
+        };
+        returns.push(ret);
+
+        // Master Ledger me credit entry banao (balance kam karne ke liye)
+        const masterReturnEntry = {
+          id: currentId++,
+          customer: customer,
+          date: returnDate.value,
+          particulars: 'RETURN: ' + ret.particulars,
+          description: ret.description || 'Product return',
+          qty: qty,
+          unit: returnUnit.value,
+          rate: rate,
+          profitPerUnit: 0,
+          debit: 0,
+          credit: amount,
+          paymentMethod: 'Cash',
+          bankTid: '',
+          materialUsed: ret.material,
+          returnQty: qty,
+          isReturn: true,
+          returnId: ret.id,
+          runningBalance: 0
+        };
+        masterLedger.push(masterReturnEntry);
+
+        syncInventoryFromLedger();
+        refreshAll();
+
+        returnCustomer.value = '';
+        returnParticulars.value = '';
+        returnQtyInputEl.value = '1';
+        returnRate.value = '0';
+        returnAmount.value = 'Rs 0.00';
+        returnMaterial.value = '';
+        returnDescription.value = '';
+        returnDate.value = new Date().toISOString().slice(0,10);
+      });
+
       document.getElementById('clearFormBtn').addEventListener('click', () => {
         document.getElementById('customerName').value = '';
         document.getElementById('particulars').value = '';
@@ -965,11 +1228,13 @@
       masterFilter.addEventListener('input', () => renderMasterTable());
 
       document.getElementById('resetMasterBtn').addEventListener('click', () => {
-        if (confirm('Delete all transactions and inventory? This cannot be undone.')) {
+        if (confirm('Delete all transactions, inventory and returns? This cannot be undone.')) {
           masterLedger = [];
           inventory = [];
+          returns = [];
           currentId = 1;
           invId = 1;
+          returnId = 1;
           refreshAll();
         }
       });
@@ -978,6 +1243,7 @@
 
       document.getElementById('txnDate').value = new Date().toISOString().slice(0,10);
       invDate.value = new Date().toISOString().slice(0,10);
+      returnDate.value = new Date().toISOString().slice(0,10);
 
       // ---------- SEED ----------
       function seedData() {
@@ -1008,13 +1274,13 @@
         ];
         currentId = 2;
         invId = 2;
+        returnId = 1;
         syncInventoryFromLedger();
         refreshAll();
       }
 
       seedData();
 
-      // ---------- 3D LOADING SCREEN (9 seconds) ----------
       window.addEventListener('load', () => {
         const loader = document.getElementById('loader-wrapper');
         setTimeout(() => {
