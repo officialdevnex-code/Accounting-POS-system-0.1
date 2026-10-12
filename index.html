@@ -638,6 +638,7 @@
         });
       }
 
+      // ---------- RENDER MASTER TABLE WITH TOTAL ROW ----------
       function renderMasterTable() {
         computeCustomerRunningBalances();
         const filterText = masterFilter.value.trim().toLowerCase();
@@ -657,8 +658,13 @@
         });
 
         let html = '';
+        let totalDebit = 0, totalCredit = 0, totalProfit = 0;
         sortedForDisplay.forEach(t => {
           const profit = (t.profitPerUnit || 0) * (t.qty || 0);
+          totalDebit += (t.debit || 0);
+          totalCredit += (t.credit || 0);
+          totalProfit += profit;
+
           let methodBadge = '';
           if (t.paymentMethod === 'Cash') methodBadge = '<span class="badge badge-cash">Cash</span>';
           else if (t.paymentMethod === 'Bank') methodBadge = '<span class="badge badge-bank">Bank</span>';
@@ -685,6 +691,18 @@
             <td><button class="btn btn-outline-danger btn-sm btn-sm-icon delete-txn" data-id="${t.id}"><i class="bi bi-trash"></i></button></td>
           </tr>`;
         });
+
+        // *** TOTAL ROW (FIX #3) ***
+        html += `<tr class="table-secondary fw-bold" style="border-top: 2px solid #0b1c2f;">
+          <td class="sticky-col">TOTAL</td>
+          <td colspan="6"></td>
+          <td>${formatCurrency(totalDebit)}</td>
+          <td>${formatCurrency(totalCredit)}</td>
+          <td colspan="5"></td>
+          <td class="${totalProfit >= 0 ? 'profit-positive' : 'profit-negative'}">${formatCurrency(totalProfit)}</td>
+          <td colspan="2"></td>
+        </tr>`;
+
         masterTableBody.innerHTML = html;
         masterCount.textContent = filtered.length + ' entries';
 
@@ -800,7 +818,7 @@
         renderInventory();
       }
 
-      // ---------- EXCEL EXPORT ----------
+      // ---------- EXCEL EXPORT (with totals) ----------
       function exportToExcel() {
         if (masterLedger.length === 0 && inventory.length === 0) {
           alert('No data to export.');
