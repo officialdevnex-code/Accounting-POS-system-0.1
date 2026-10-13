@@ -1,1293 +1,371 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Syed Ghina Ul Hassan · Ledger Accounting</title>
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230b1c2f'/%3E%3Ctext x='50' y='68' font-size='40' text-anchor='middle' fill='%2338bdf8' font-family='Inter, sans-serif' font-weight='700'%3ESGUH%3C/text%3E%3C/svg%3E">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
-  <style>
-    * { font-family: 'Inter', sans-serif; }
-    body { background: #e9eef3; padding-bottom: 3rem; }
-
-    #loader-wrapper {
-      position: fixed; inset: 0;
-      background: linear-gradient(145deg, #0b1c2f 0%, #1a3a5c 100%);
-      z-index: 9999;
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      transition: opacity 0.8s ease, visibility 0.8s ease;
-      perspective: 800px;
-    }
-    #loader-wrapper.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
-    .loader-scene {
-      width: 140px; height: 140px;
-      position: relative; transform-style: preserve-3d;
-      animation: spin3d 3s linear infinite;
-    }
-    .loader-cube { position: absolute; width: 100%; height: 100%; transform-style: preserve-3d; }
-    .loader-cube .face {
-      position: absolute; width: 100px; height: 100px;
-      background: rgba(255, 255, 255, 0.06);
-      border: 2px solid rgba(255, 255, 255, 0.25);
-      backdrop-filter: blur(4px);
-      border-radius: 12px;
-      box-shadow: 0 0 30px rgba(0, 180, 255, 0.25);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 2rem; color: #8ecae6;
-    }
-    .loader-cube .front  { transform: translateZ(50px); }
-    .loader-cube .back   { transform: rotateY(180deg) translateZ(50px); }
-    .loader-cube .right  { transform: rotateY(90deg) translateZ(50px); }
-    .loader-cube .left   { transform: rotateY(-90deg) translateZ(50px); }
-    .loader-cube .top    { transform: rotateX(90deg) translateZ(50px); }
-    .loader-cube .bottom { transform: rotateX(-90deg) translateZ(50px); }
-    @keyframes spin3d { 0% { transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg); } 100% { transform: rotateX(360deg) rotateY(360deg) rotateZ(360deg); } }
-    .loader-text { color: #e0f2fe; margin-top: 3rem; font-weight: 600; letter-spacing: 0.15em; font-size: 1.1rem; text-shadow: 0 0 20px rgba(56, 189, 248, 0.6); animation: pulseText 1.4s ease-in-out infinite; }
-    .loader-sub { color: #94a3b8; font-size: 0.8rem; margin-top: 0.5rem; letter-spacing: 0.2em; }
-    @keyframes pulseText { 0%, 100% { opacity: 0.6; transform: scale(0.98); } 50% { opacity: 1; transform: scale(1.02); } }
-    .loader-bar { width: 260px; height: 4px; background: rgba(255,255,255,0.08); border-radius: 4px; margin-top: 2.2rem; overflow: hidden; }
-    .loader-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #38bdf8, #818cf8, #f472b6); border-radius: 4px; animation: fillBar 9s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
-    @keyframes fillBar { 0% { width: 0%; } 15% { width: 12%; } 40% { width: 38%; } 70% { width: 68%; } 100% { width: 100%; } }
-
-    .card-header { font-weight: 600; letter-spacing: -0.01em; }
-    .table-responsive { font-size: 0.82rem; }
-    .table th { background: #f1f5f9; font-weight: 600; color: #0f172a; white-space: nowrap; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.02em; }
-    .table td { vertical-align: middle; font-size: 0.82rem; }
-    .badge-cash { background: #d1fae5; color: #065f46; }
-    .badge-bank { background: #dbeafe; color: #1e40af; }
-    .badge-cheque { background: #fef3c7; color: #92400e; }
-    .running-balance { font-weight: 700; }
-    .negative-bal { color: #dc2626; }
-    .positive-bal { color: #16a34a; }
-    .profit-positive { color: #059669; font-weight: 600; }
-    .profit-negative { color: #dc2626; font-weight: 600; }
-    .master-ledger th { background: #0b1c2f; color: white; font-size: 0.72rem; }
-    .customer-ledger-header { background: #1e293b; color: white; }
-    .summary-card { border-left: 5px solid; border-radius: 0.75rem; transition: 0.1s; }
-    .summary-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
-    .btn-sm-icon { padding: 0.15rem 0.45rem; font-size: 0.7rem; }
-    .form-label { font-size: 0.75rem; font-weight: 600; color: #334155; margin-bottom: 0.15rem; }
-    .table-hover tbody tr:hover { background-color: #f1f5f9; }
-    .sticky-col { position: sticky; left: 0; background: #f8fafc; z-index: 1; }
-    .master-ledger .sticky-col { background: #0b1c2f; color: white; }
-    .customer-ledger-header .sticky-col { background: #1e293b; color: white; }
-    .filter-bar { background: #ffffff; border-radius: 1rem; padding: 0.75rem 1.25rem; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
-    .table td input, .table td select { font-size: 0.78rem; padding: 0.2rem 0.35rem; }
-    .master-entry-card { background: #ffffff; border-radius: 1rem; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-    .brand-editable { background: transparent; border: 1px dashed rgba(255,255,255,0.3); color: white; font-weight: 700; font-size: 1.25rem; padding: 0.1rem 0.5rem; border-radius: 6px; width: 230px; }
-    .brand-editable:focus { outline: none; border-color: #38bdf8; background: rgba(255,255,255,0.05); }
-    .desc-col { max-width: 140px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .table-responsive::-webkit-scrollbar { height: 6px; width: 6px; }
-    .table-responsive::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 4px; }
-    .ledger-paper { background: #fcfcf5; border: 1px solid #d1d5db; }
-    .ledger-paper th { background: #e6f0e6; color: #1e3a2e; border-color: #b7c9b7; }
-    .ledger-paper td { border-color: #d1d9d1; }
-    .ledger-paper tbody tr:nth-child(even) { background: #f5faf5; }
-    .fw-600 { font-weight: 600; }
-    .developer-credit { color: #94a3b8; font-size: 0.75rem; letter-spacing: 0.05em; }
-    .inv-card { background: #ffffff; border-radius: 1rem; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-    .inv-low { background: #fee2e2; color: #991b1b; }
-    .inv-ok { background: #dcfce7; color: #166534; }
-    .auto-field { background-color: #f8fafc; }
-
-    .returns-card { background: #ffffff; border-radius: 1rem; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-left: 5px solid #f59e0b; }
-    .returns-header { background: #fffbeb; }
-    .return-badge { background: #fef3c7; color: #92400e; font-weight: 600; }
-    .total-col { background: #f0f9ff; font-weight: 700; color: #0369a1; }
-
-    @media (max-width: 768px) {
-      .brand-editable { width: 160px; font-size: 1rem; }
-      .summary-card .fs-4 { font-size: 1.1rem; }
-      .table-responsive { font-size: 0.75rem; }
-      .table th, .table td { font-size: 0.7rem; padding: 0.3rem 0.25rem; }
-      .sticky-col { position: sticky; left: 0; }
-      .master-ledger .sticky-col { background: #0b1c2f; }
-      .container-fluid { padding-left: 0.5rem; padding-right: 0.5rem; }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Syed Ghina Ul Hassan · Ledger Accounting</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%234f46e5'/%3E%3Ctext x='50' y='66' font-size='38' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='700'%3ESG%3C/text%3E%3C/svg%3E">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--pri:#4f46e5;--pri2:#7c3aed;--ink:#0f172a;--mut:#64748b;--bg:#eef2ff;--card:#fff;--line:#e2e8f0;--ok:#059669;--bad:#dc2626;--warn:#f59e0b}
+*{font-family:'Inter',system-ui,sans-serif}
+body{background:radial-gradient(circle at 10% 0%,#e0e7ff 0,transparent 40%),radial-gradient(circle at 90% 10%,#fae8ff 0,transparent 35%),var(--bg);color:var(--ink);padding-bottom:2rem;min-height:100vh}
+#loader{position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,#1e1b4b,#4f46e5 60%,#7c3aed);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;transition:opacity .6s,visibility .6s}
+#loader.hide{opacity:0;visibility:hidden}
+.ring{width:70px;height:70px;border-radius:50%;border:5px solid rgba(255,255,255,.2);border-top-color:#fff;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ltxt{margin-top:1.5rem;font-weight:700;letter-spacing:.15em;animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.55}}
+.topbar{background:linear-gradient(120deg,#1e1b4b,#4338ca 55%,#7c3aed);box-shadow:0 8px 24px rgba(79,70,229,.3)}
+.brand-in{background:rgba(255,255,255,.12);border:1px dashed rgba(255,255,255,.4);color:#fff;font-weight:700;font-size:1.1rem;padding:.25rem .7rem;border-radius:10px;width:min(260px,60vw)}
+.brand-in:focus{outline:0;background:rgba(255,255,255,.2);border-color:#fff}
+.sec{background:var(--card);border:0;border-radius:1.1rem;box-shadow:0 6px 22px rgba(30,41,59,.07);animation:up .6s both;overflow:hidden}
+@keyframes up{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+.sec-h{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;padding:1rem 1.25rem;border-bottom:1px solid var(--line)}
+.sec-h h5{margin:0;font-weight:700;font-size:1.05rem}
+.ico{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;color:#fff;background:linear-gradient(135deg,var(--pri),var(--pri2))}
+.ico.o{background:linear-gradient(135deg,#f59e0b,#ef4444)}.ico.g{background:linear-gradient(135deg,#10b981,#0ea5e9)}
+.sc{border:0;border-radius:1rem;color:#fff;padding:1rem 1.1rem;position:relative;overflow:hidden;animation:up .6s both;transition:transform .2s,box-shadow .2s;height:100%}
+.sc:hover{transform:translateY(-4px);box-shadow:0 14px 28px rgba(0,0,0,.18)}
+.sc i{position:absolute;right:.8rem;top:.6rem;font-size:2.2rem;opacity:.25}
+.sc small{opacity:.9;text-transform:uppercase;font-weight:600;font-size:.68rem;letter-spacing:.05em}
+.sc .v{font-size:1.25rem;font-weight:700;margin-top:.2rem;word-break:break-word}
+.c1{background:linear-gradient(135deg,#4f46e5,#6366f1)}.c2{background:linear-gradient(135deg,#059669,#10b981)}.c3{background:linear-gradient(135deg,#f59e0b,#f97316)}.c4{background:linear-gradient(135deg,#dc2626,#f43f5e)}.c5{background:linear-gradient(135deg,#7c3aed,#a855f7)}
+.form-label{font-size:.72rem;font-weight:600;color:#334155;margin-bottom:.15rem}
+.form-control,.form-select{border-radius:.6rem;border-color:#cbd5e1;font-size:.85rem}
+.form-control:focus,.form-select:focus{border-color:var(--pri);box-shadow:0 0 0 .2rem rgba(79,70,229,.15)}
+.auto{background:#eef2ff!important;font-weight:700;color:#3730a3}
+.btn{border-radius:.6rem;font-weight:600;transition:transform .15s,box-shadow .15s}
+.btn:hover{transform:translateY(-1px)}.btn:active{transform:scale(.97)}
+.btn-pri{background:linear-gradient(135deg,var(--pri),var(--pri2));color:#fff;border:0}
+.btn-pri:hover{color:#fff;box-shadow:0 6px 16px rgba(79,70,229,.35)}
+.tw{overflow:auto;-webkit-overflow-scrolling:touch}
+.tw::-webkit-scrollbar{height:7px;width:7px}.tw::-webkit-scrollbar-thumb{background:#a5b4fc;border-radius:6px}
+.table{margin:0;font-size:.8rem}
+.table th{background:#f1f5f9;font-size:.68rem;text-transform:uppercase;letter-spacing:.03em;white-space:nowrap;color:#334155;position:sticky;top:0;z-index:2}
+.table td{vertical-align:middle;white-space:nowrap}
+.table tbody tr{animation:fade .35s both;transition:background .15s}
+.table-hover tbody tr:hover{background:#eef2ff}
+@keyframes fade{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:none}}
+.tcol{background:#eef2ff;color:#3730a3;font-weight:700}
+.pos{color:var(--bad);font-weight:700}.neg{color:var(--ok);font-weight:700}
+.pp{color:var(--ok);font-weight:600}.pn{color:var(--bad);font-weight:600}
+.bd{padding:.25em .6em;border-radius:20px;font-size:.68rem;font-weight:600}
+.b-cash{background:#d1fae5;color:#065f46}.b-bank{background:#dbeafe;color:#1e40af}.b-cheque{background:#fef3c7;color:#92400e}.b-ret{background:#ffedd5;color:#9a3412}
+.low{background:#fee2e2;color:#991b1b}.okk{background:#dcfce7;color:#166534}
+.stk{border:1px solid #fed7aa;background:#fff7ed;border-radius:.8rem;padding:.7rem .9rem;transition:transform .2s}
+.stk:hover{transform:translateY(-3px)}
+.stk b{font-size:1.15rem;color:#9a3412}
+.cl-h{background:linear-gradient(120deg,#1e293b,#334155);color:#fff}
+.ledger-paper th{background:#e8f0fe}
+.hint{font-size:.74rem;color:var(--mut)}
+.mini{padding:.15rem .45rem;font-size:.72rem}
+.empty{padding:1.5rem;text-align:center;color:var(--mut);font-size:.85rem}
+footer{color:var(--mut);font-size:.75rem}
+@media(max-width:768px){.container-fluid{padding-left:.6rem;padding-right:.6rem}.sc .v{font-size:1.05rem}.table{font-size:.72rem}.sec-h{padding:.8rem}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
 </head>
 <body>
+<div id="loader"><div class="ring"></div><div class="ltxt">SYED GHINA UL HASSAN</div><small class="mt-1 opacity-75">LEDGER ACCOUNTING SYSTEM</small></div>
 
-  <div id="loader-wrapper">
-    <div class="loader-scene">
-      <div class="loader-cube">
-        <div class="face front"><i class="bi bi-journal-bookmark-fill"></i></div>
-        <div class="face back"><i class="bi bi-calculator"></i></div>
-        <div class="face right"><i class="bi bi-cash-stack"></i></div>
-        <div class="face left"><i class="bi bi-graph-up-arrow"></i></div>
-        <div class="face top"><i class="bi bi-pie-chart-fill"></i></div>
-        <div class="face bottom"><i class="bi bi-receipt"></i></div>
-      </div>
-    </div>
-    <div class="loader-text">SYED GHINA UL HASSAN</div>
-    <div class="loader-sub">LEDGER ACCOUNTING SYSTEM</div>
-    <div class="loader-bar"><div class="loader-bar-fill"></div></div>
+<nav class="topbar navbar navbar-dark mb-4 py-2">
+ <div class="container-fluid px-3 px-md-4 gap-2">
+  <div class="d-flex align-items-center gap-2"><i class="bi bi-journal-bookmark-fill fs-4 text-white"></i>
+  <input id="companyName" class="brand-in" value="Syed Ghina Ul Hassan" title="Click to edit company name"></div>
+  <div class="d-flex gap-2 ms-auto">
+   <button class="btn btn-light btn-sm" id="exportBtn"><i class="bi bi-file-earmark-excel"></i> <span class="d-none d-sm-inline">Export Excel</span></button>
   </div>
+ </div>
+</nav>
 
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
-    <div class="container-fluid px-4">
-      <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="#">
-        <i class="bi bi-journal-bookmark-fill me-1"></i>
-        <input type="text" id="companyNameInput" class="brand-editable" value="Syed Ghina Ul Hassan" placeholder="Company Name" title="Click to edit company name">
-      </a>
-      <span class="navbar-text small text-white-50 d-none d-md-inline">Master & Customer Ledgers · Inventory · PKR</span>
-      <div class="ms-auto d-flex gap-2 align-items-center">
-        <span class="developer-credit d-none d-lg-inline">Development by Syed Ghina Ul Hassan</span>
-        <button class="btn btn-outline-light btn-sm" id="exportExcelBtn"><i class="bi bi-file-earmark-excel"></i> Export Excel</button>
-      </div>
-    </div>
-  </nav>
+<div class="container-fluid px-3 px-md-4">
 
-  <div class="container-fluid px-4">
+ <div class="row g-3 mb-4 row-cols-2 row-cols-md-3 row-cols-xl-5">
+  <div class="col"><div class="sc c1" style="animation-delay:.05s"><i class="bi bi-cart-check"></i><small>Total Sales (Credit)</small><div class="v" id="sSales">Rs 0.00</div></div></div>
+  <div class="col"><div class="sc c2" style="animation-delay:.1s"><i class="bi bi-cash-stack"></i><small>Payments (Debit)</small><div class="v" id="sPay">Rs 0.00</div></div></div>
+  <div class="col"><div class="sc c3" style="animation-delay:.15s"><i class="bi bi-arrow-return-left"></i><small>Returns</small><div class="v" id="sRet">Rs 0.00</div></div></div>
+  <div class="col"><div class="sc c4" style="animation-delay:.2s"><i class="bi bi-hourglass-split"></i><small>Outstanding</small><div class="v" id="sOut">Rs 0.00</div></div></div>
+  <div class="col col-12 col-md-6 col-xl"><div class="sc c5" style="animation-delay:.25s"><i class="bi bi-graph-up-arrow"></i><small>Total Profit</small><div class="v" id="sProfit">Rs 0.00</div></div></div>
+ </div>
 
-    <div class="row g-3 mb-4">
-      <div class="col-6 col-md-3">
-        <div class="summary-card card h-100 border-0 shadow-sm" style="border-left-color: #0d6efd;">
-          <div class="card-body py-3">
-            <div class="d-flex justify-content-between align-items-center">
-              <div>
-                <div class="text-muted small text-uppercase fw-semibold">Total Sales</div>
-                <div class="fs-4 fw-bold" id="summarySales">Rs 0.00</div>
-              </div>
-              <i class="bi bi-cart-check fs-2 text-primary opacity-50"></i>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="col-6 col-md-3">
-        <div class="summary-card card h-100 border-0 shadow-sm" style="border-left-color: #10b981;">
-          <div class="card-body py-3">
-            <div class="d-flex justify-content-between align-items-center">
-              <div>
-                <div class="text-muted small text-uppercase fw-semibold">Payments Received</div>
-                <div class="fs-4 fw-bold" id="summaryPayments">Rs 0.00</div>
-              </div>
-              <i class="bi bi-cash-stack fs-2 text-success opacity-50"></i>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="col-6 col-md-3">
-        <div class="summary-card card h-100 border-0 shadow-sm" style="border-left-color: #f59e0b;">
-          <div class="card-body py-3">
-            <div class="d-flex justify-content-between align-items-center">
-              <div>
-                <div class="text-muted small text-uppercase fw-semibold">Outstanding</div>
-                <div class="fs-4 fw-bold" id="summaryOutstanding">Rs 0.00</div>
-              </div>
-              <i class="bi bi-hourglass-split fs-2 text-warning opacity-50"></i>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="col-6 col-md-3">
-        <div class="summary-card card h-100 border-0 shadow-sm" style="border-left-color: #8b5cf6;">
-          <div class="card-body py-3">
-            <div class="d-flex justify-content-between align-items-center">
-              <div>
-                <div class="text-muted small text-uppercase fw-semibold">Total Profit</div>
-                <div class="fs-4 fw-bold" id="summaryProfit">Rs 0.00</div>
-              </div>
-              <i class="bi bi-graph-up-arrow fs-2 text-purple opacity-50"></i>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="card inv-card mb-4">
-      <div class="card-header bg-white d-flex flex-wrap align-items-center gap-2 py-3 border-0">
-        <i class="bi bi-box-seam text-primary fs-5"></i>
-        <h5 class="mb-0 fw-semibold">Inventory Purchases</h5>
-        <span class="badge bg-light text-dark ms-2">Add stock → used in Master Ledger</span>
-        <span class="badge bg-info text-dark ms-auto"><i class="bi bi-currency-exchange"></i> PKR</span>
-      </div>
-      <div class="card-body pt-0">
-        <form id="inventoryForm" class="row g-3 align-items-end">
-          <div class="col-md-2">
-            <label class="form-label">Material / Product</label>
-            <input type="text" class="form-control form-control-sm" id="invMaterial" placeholder="e.g. Rivet Big" required>
-          </div>
-          <div class="col-md-2">
-            <label class="form-label">Date</label>
-            <input type="date" class="form-control form-control-sm" id="invDate" required>
-          </div>
-          <div class="col-md-1">
-            <label class="form-label">Qty</label>
-            <input type="number" step="any" class="form-control form-control-sm" id="invQty" value="1" required>
-          </div>
-          <div class="col-md-1">
-            <label class="form-label">Unit</label>
-            <select class="form-select form-select-sm" id="invUnit">
-              <option value="Kg">Kg</option>
-              <option value="Piece">Piece</option>
-            </select>
-          </div>
-          <div class="col-md-1">
-            <label class="form-label">Rate</label>
-            <input type="number" step="0.01" class="form-control form-control-sm" id="invRate" value="0" required>
-          </div>
-          <div class="col-md-1">
-            <label class="form-label">Total</label>
-            <input type="text" class="form-control form-control-sm auto-field" id="invTotal" readonly value="Rs 0.00">
-          </div>
-          <div class="col-md-2">
-            <label class="form-label">Supplier (optional)</label>
-            <input type="text" class="form-control form-control-sm" id="invSupplier" placeholder="Supplier name">
-          </div>
-          <div class="col-md-2 d-flex align-items-end">
-            <button type="submit" class="btn btn-success btn-sm w-100"><i class="bi bi-plus-circle"></i> Add Purchase</button>
-          </div>
-        </form>
-        <div class="mt-3 table-responsive" style="max-height: 220px; overflow-y: auto;">
-          <table class="table table-sm table-bordered mb-0">
-            <thead class="table-light">
-              <tr>
-                <th>Date</th>
-                <th>Material</th>
-                <th>Qty</th>
-                <th>Unit</th>
-                <th>Rate</th>
-                <th>Total</th>
-                <th>Supplier</th>
-                <th>Remaining</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody id="inventoryTableBody"></tbody>
-          </table>
-        </div>
-        <div class="mt-2 small text-muted"><i class="bi bi-info-circle"></i> Purchases increase stock. Sales / material used decrease it. Returns add back.</div>
-      </div>
-    </div>
-
-    <div class="card master-entry-card mb-4">
-      <div class="card-header bg-white d-flex flex-wrap align-items-center gap-2 py-3 border-0">
-        <i class="bi bi-pencil-square text-primary fs-5"></i>
-        <h5 class="mb-0 fw-semibold">Master Ledger · New Transaction</h5>
-        <span class="badge bg-light text-dark ms-2">Enter once → updates customer ledger & inventory</span>
-        <span class="badge bg-info text-dark ms-auto"><i class="bi bi-currency-exchange"></i> PKR</span>
-      </div>
-      <div class="card-body pt-0">
-        <form id="masterForm" class="row g-3 align-items-end">
-          <div class="col-md-2">
-            <label class="form-label">Customer</label>
-            <input type="text" class="form-control form-control-sm" id="customerName" list="customerList" placeholder="e.g. GM Industry" required>
-            <datalist id="customerList"></datalist>
-          </div>
-          <div class="col-md-2">
-            <label class="form-label">Date</label>
-            <input type="date" class="form-control form-control-sm" id="txnDate" required>
-          </div>
-          <div class="col-md-2">
-            <label class="form-label">Particulars</label>
-            <input type="text" class="form-control form-control-sm" id="particulars" placeholder="Rivet Big 151kg" required>
-          </div>
-          <div class="col-md-2">
-            <label class="form-label">Description <span class="text-muted fw-normal">(extra)</span></label>
-            <input type="text" class="form-control form-control-sm" id="description" placeholder="Optional details...">
-          </div>
-          <div class="col-md-1">
-            <label class="form-label">Qty</label>
-            <input type="number" step="any" class="form-control form-control-sm" id="qty" value="1" required>
-          </div>
-          <div class="col-md-1">
-            <label class="form-label">Unit</label>
-            <select class="form-select form-select-sm" id="unit">
-              <option value="Kg">Kg</option>
-              <option value="Piece">Piece</option>
-            </select>
-          </div>
-          <div class="col-md-1">
-            <label class="form-label">Rate</label>
-            <input type="number" step="0.01" class="form-control form-control-sm" id="rate" value="0" required>
-          </div>
-          <div class="col-md-1">
-            <label class="form-label">Profit/unit</label>
-            <input type="number" step="0.01" class="form-control form-control-sm" id="profitPerUnit" value="0">
-          </div>
-          <div class="col-md-1">
-            <label class="form-label">Debit (Rs)</label>
-            <input type="number" step="0.01" class="form-control form-control-sm" id="debit" value="0">
-          </div>
-          <div class="col-md-1">
-            <label class="form-label">Credit (Rs)</label>
-            <input type="number" step="0.01" class="form-control form-control-sm" id="credit" value="0">
-          </div>
-          <div class="col-md-1">
-            <label class="form-label">Method</label>
-            <select class="form-select form-select-sm" id="paymentMethod">
-              <option value="Cash">Cash</option>
-              <option value="Bank">Bank</option>
-              <option value="Cheque">Cheque</option>
-            </select>
-          </div>
-          <div class="col-md-2">
-            <label class="form-label">Bank TID / Cheque #</label>
-            <input type="text" class="form-control form-control-sm" id="bankTid" placeholder="Txn ID / Cheque">
-          </div>
-          <div class="col-md-2">
-            <label class="form-label">Material Used <span class="text-muted fw-normal">(from inventory)</span></label>
-            <select class="form-select form-select-sm" id="materialUsed">
-              <option value="">— none —</option>
-            </select>
-          </div>
-          <div class="col-md-1">
-            <label class="form-label">Return Qty</label>
-            <input type="number" step="any" class="form-control form-control-sm" id="returnQty" value="0" min="0">
-          </div>
-          <div class="col-md-1 d-flex align-items-end">
-            <div class="form-check">
-              <input class="form-check-input" type="checkbox" id="isReturn">
-              <label class="form-check-label small" for="isReturn">Return</label>
-            </div>
-          </div>
-          <div class="col-12 d-flex justify-content-end gap-2 mt-2">
-            <button type="button" class="btn btn-outline-secondary btn-sm" id="clearFormBtn"><i class="bi bi-eraser"></i> Clear</button>
-            <button type="submit" class="btn btn-primary btn-sm px-4"><i class="bi bi-plus-circle"></i> Add to Master Ledger</button>
-          </div>
-        </form>
-        <div class="mt-2 small text-muted"><i class="bi bi-info-circle"></i> Debit = sale amount (customer owes), Credit = payment received. Select material to auto‑deduct from inventory. Check "Return" for product returns (adds back to stock).</div>
-      </div>
-    </div>
-
-    <!-- ========== INDEPENDENT RETURNS SECTION ========== -->
-    <div class="card returns-card mb-4">
-      <div class="card-header returns-header d-flex flex-wrap align-items-center gap-2 py-3 border-0">
-        <i class="bi bi-arrow-return-left text-warning fs-5"></i>
-        <h5 class="mb-0 fw-semibold">Independent Returns Section</h5>
-        <span class="badge return-badge ms-2">Customer product returns → auto‑deduct from outstanding</span>
-        <span class="badge bg-info text-dark ms-auto"><i class="bi bi-currency-exchange"></i> PKR</span>
-      </div>
-      <div class="card-body pt-0">
-        <form id="returnsForm" class="row g-3 align-items-end">
-          <div class="col-md-3">
-            <label class="form-label">Customer Name</label>
-            <input type="text" class="form-control form-control-sm" id="returnCustomer" list="customerList" placeholder="Select or type customer" required>
-          </div>
-          <div class="col-md-2">
-            <label class="form-label">Return Date</label>
-            <input type="date" class="form-control form-control-sm" id="returnDate" required>
-          </div>
-          <div class="col-md-3">
-            <label class="form-label">Product / Particulars</label>
-            <input type="text" class="form-control form-control-sm" id="returnParticulars" placeholder="e.g. Rivet Big 15kg" required>
-          </div>
-          <div class="col-md-1">
-            <label class="form-label">Qty</label>
-            <input type="number" step="any" class="form-control form-control-sm" id="returnQtyInput" value="1" required>
-          </div>
-          <div class="col-md-1">
-            <label class="form-label">Unit</label>
-            <select class="form-select form-select-sm" id="returnUnit">
-              <option value="Kg">Kg</option>
-              <option value="Piece">Piece</option>
-            </select>
-          </div>
-          <div class="col-md-1">
-            <label class="form-label">Rate</label>
-            <input type="number" step="0.01" class="form-control form-control-sm" id="returnRate" value="0" required>
-          </div>
-          <div class="col-md-2">
-            <label class="form-label">Return Amount</label>
-            <input type="text" class="form-control form-control-sm auto-field" id="returnAmount" readonly value="Rs 0.00">
-          </div>
-          <div class="col-md-2">
-            <label class="form-label">Material (Inventory)</label>
-            <select class="form-select form-select-sm" id="returnMaterial">
-              <option value="">— none —</option>
-            </select>
-          </div>
-          <div class="col-md-2">
-            <label class="form-label">Description</label>
-            <input type="text" class="form-control form-control-sm" id="returnDescription" placeholder="Optional details...">
-          </div>
-          <div class="col-md-2 d-flex align-items-end">
-            <button type="submit" class="btn btn-warning btn-sm w-100 text-dark fw-semibold"><i class="bi bi-arrow-return-left"></i> Submit Return</button>
-          </div>
-        </form>
-        <div class="mt-2 small text-muted"><i class="bi bi-info-circle"></i> Return amount is automatically deducted from the customer's outstanding balance in the Master Ledger. Inventory is restocked automatically.</div>
-
-        <div class="mt-3 table-responsive" style="max-height: 220px; overflow-y: auto;">
-          <table class="table table-sm table-bordered mb-0">
-            <thead class="table-light">
-              <tr>
-                <th>Date</th>
-                <th>Customer</th>
-                <th>Particulars</th>
-                <th>Qty</th>
-                <th>Unit</th>
-                <th>Rate</th>
-                <th>Return Amount</th>
-                <th>Material</th>
-                <th>Description</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody id="returnsTableBody"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <div class="card shadow-sm border-0 mb-5">
-      <div class="card-header bg-white d-flex flex-wrap justify-content-between align-items-center py-3 border-0">
-        <div><i class="bi bi-table text-primary me-2"></i><span class="fw-semibold">Master Ledger</span> <span class="badge bg-secondary ms-2" id="masterCount">0 entries</span></div>
-        <div class="d-flex gap-2">
-          <input type="text" class="form-control form-control-sm" placeholder="Filter by customer..." id="masterFilter" style="width: 200px;">
-          <button class="btn btn-outline-danger btn-sm" id="resetMasterBtn"><i class="bi bi-arrow-counterclockwise"></i> Reset</button>
-        </div>
-      </div>
-      <div class="card-body p-0">
-        <div class="table-responsive" style="max-height: 420px; overflow-y: auto;">
-          <table class="table table-hover table-bordered mb-0 master-ledger">
-            <thead class="sticky-top">
-              <tr>
-                <th class="sticky-col">Customer</th>
-                <th>Date</th>
-                <th>Particulars</th>
-                <th>Description</th>
-                <th>Qty</th>
-                <th>Unit</th>
-                <th>Rate</th>
-                <th>Total</th>
-                <th>Debit</th>
-                <th>Credit</th>
-                <th>Method</th>
-                <th>Bank TID</th>
-                <th>Material Used</th>
-                <th>Return</th>
-                <th>Profit</th>
-                <th>Running Bal</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody id="masterTableBody"></tbody>
-          </table>
-        </div>
-        <div class="p-2 text-muted small border-top" id="masterEmptyMsg">No transactions yet. Add one above.</div>
-      </div>
-    </div>
-
-    <div class="d-flex align-items-center gap-2 mb-3">
-      <i class="bi bi-people-fill text-primary fs-4"></i>
-      <h4 class="mb-0 fw-semibold">Customer Ledgers</h4>
-      <span class="badge bg-light text-dark ms-2" id="customerCountBadge">0 customers</span>
-    </div>
-    <div id="customerLedgersContainer" class="row g-4"></div>
-
+ <!-- INVENTORY (RAW MATERIAL) -->
+ <div class="sec mb-4" style="animation-delay:.1s">
+  <div class="sec-h"><span class="ico"><i class="bi bi-box-seam"></i></span><h5>Inventory Purchases</h5><span class="badge bg-light text-dark">Raw material only</span></div>
+  <div class="p-3">
+   <form id="invForm" class="row g-2 align-items-end">
+    <div class="col-12 col-sm-6 col-lg-2"><label class="form-label">Material</label><input class="form-control form-control-sm" id="iMat" placeholder="e.g. Steel Wire" required></div>
+    <div class="col-6 col-lg-2"><label class="form-label">Date</label><input type="date" class="form-control form-control-sm" id="iDate" required></div>
+    <div class="col-6 col-sm-3 col-lg-1"><label class="form-label">Qty</label><input type="number" step="any" min="0" class="form-control form-control-sm" id="iQty" value="1" required></div>
+    <div class="col-6 col-sm-3 col-lg-1"><label class="form-label">Unit</label><select class="form-select form-select-sm" id="iUnit"><option>Kg</option><option>Piece</option></select></div>
+    <div class="col-6 col-sm-3 col-lg-1"><label class="form-label">Rate</label><input type="number" step="0.01" min="0" class="form-control form-control-sm" id="iRate" value="0" required></div>
+    <div class="col-6 col-sm-3 col-lg-1"><label class="form-label">Total</label><input class="form-control form-control-sm auto" id="iTotal" readonly value="Rs 0.00"></div>
+    <div class="col-12 col-sm-6 col-lg-2"><label class="form-label">Supplier</label><input class="form-control form-control-sm" id="iSup" placeholder="Optional"></div>
+    <div class="col-12 col-sm-6 col-lg-2"><button class="btn btn-success btn-sm w-100"><i class="bi bi-plus-circle"></i> Add Purchase</button></div>
+   </form>
+   <div class="tw mt-3" style="max-height:230px"><table class="table table-sm table-bordered table-hover"><thead><tr><th>Date</th><th>Material</th><th>Qty</th><th>Unit</th><th>Rate</th><th>Total</th><th>Supplier</th><th>Remaining</th><th></th></tr></thead><tbody id="invBody"></tbody></table></div>
+   <div class="hint mt-2"><i class="bi bi-info-circle"></i> Raw material stock: purchases add, sales (Material Used) deduct. Customer returns never touch this table.</div>
   </div>
-
-  <footer class="text-center mt-5 pb-3">
-    <span class="developer-credit">Development by Syed Ghina Ul Hassan · Ledger Accounting System</span>
-  </footer>
-
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
-
-  <script>
-    (function() {
-      let masterLedger = [];
-      let inventory = [];
-      let returns = [];
-      let currentId = 1;
-      let invId = 1;
-      let returnId = 1;
-
-      const masterForm = document.getElementById('masterForm');
-      const masterTableBody = document.getElementById('masterTableBody');
-      const masterCount = document.getElementById('masterCount');
-      const masterEmptyMsg = document.getElementById('masterEmptyMsg');
-      const masterFilter = document.getElementById('masterFilter');
-      const customerListDatalist = document.getElementById('customerList');
-      const customerLedgersContainer = document.getElementById('customerLedgersContainer');
-      const customerCountBadge = document.getElementById('customerCountBadge');
-      const companyNameInput = document.getElementById('companyNameInput');
-
-      const inventoryForm = document.getElementById('inventoryForm');
-      const inventoryTableBody = document.getElementById('inventoryTableBody');
-      const invMaterial = document.getElementById('invMaterial');
-      const invDate = document.getElementById('invDate');
-      const invQty = document.getElementById('invQty');
-      const invUnit = document.getElementById('invUnit');
-      const invRate = document.getElementById('invRate');
-      const invTotal = document.getElementById('invTotal');
-      const invSupplier = document.getElementById('invSupplier');
-
-      const materialUsedSelect = document.getElementById('materialUsed');
-      const returnQtyInput = document.getElementById('returnQty');
-      const isReturnCheck = document.getElementById('isReturn');
-      const qtyInput = document.getElementById('qty');
-      const rateInput = document.getElementById('rate');
-      const debitInput = document.getElementById('debit');
-      const creditInput = document.getElementById('credit');
-
-      const returnsForm = document.getElementById('returnsForm');
-      const returnsTableBody = document.getElementById('returnsTableBody');
-      const returnCustomer = document.getElementById('returnCustomer');
-      const returnDate = document.getElementById('returnDate');
-      const returnParticulars = document.getElementById('returnParticulars');
-      const returnQtyInputEl = document.getElementById('returnQtyInput');
-      const returnUnit = document.getElementById('returnUnit');
-      const returnRate = document.getElementById('returnRate');
-      const returnAmount = document.getElementById('returnAmount');
-      const returnMaterial = document.getElementById('returnMaterial');
-      const returnDescription = document.getElementById('returnDescription');
-
-      const summarySales = document.getElementById('summarySales');
-      const summaryPayments = document.getElementById('summaryPayments');
-      const summaryOutstanding = document.getElementById('summaryOutstanding');
-      const summaryProfit = document.getElementById('summaryProfit');
-
-      function formatCurrency(num) {
-        if (isNaN(num)) num = 0;
-        return 'Rs ' + Number(num).toLocaleString('en-PK', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-      }
-
-      function escapeHtml(text) {
-        if (!text) return '';
-        return String(text).replace(/[&<>"]/g, function(m) {
-          if (m === '&') return '&amp;';
-          if (m === '<') return '&lt;';
-          if (m === '>') return '&gt;';
-          if (m === '"') return '&quot;';
-          return m;
-        });
-      }
-
-      function getCompanyName() {
-        return companyNameInput.value.trim() || 'Syed Ghina Ul Hassan';
-      }
-
-      // ---------- AUTO-CALCULATE DEBIT ----------
-      function autoCalculateDebit() {
-        const qty = parseFloat(qtyInput.value) || 0;
-        const rate = parseFloat(rateInput.value) || 0;
-        const credit = parseFloat(creditInput.value) || 0;
-        if (qty > 0 && rate > 0 && credit === 0) {
-          if ((parseFloat(debitInput.value) || 0) === 0) {
-            debitInput.value = (qty * rate).toFixed(2);
-          }
-        }
-      }
-
-      qtyInput.addEventListener('input', autoCalculateDebit);
-      rateInput.addEventListener('input', autoCalculateDebit);
-
-      creditInput.addEventListener('input', () => {
-        const creditVal = parseFloat(creditInput.value) || 0;
-        if (creditVal > 0) {
-          debitInput.value = '0';
-        }
-      });
-
-      // ---------- RETURNS: auto amount ----------
-      function calcReturnAmount() {
-        const q = parseFloat(returnQtyInputEl.value) || 0;
-        const r = parseFloat(returnRate.value) || 0;
-        returnAmount.value = formatCurrency(q * r);
-      }
-      returnQtyInputEl.addEventListener('input', calcReturnAmount);
-      returnRate.addEventListener('input', calcReturnAmount);
-
-      // ---------- INVENTORY LOGIC ----------
-      function renderInventory() {
-        if (inventory.length === 0) {
-          inventoryTableBody.innerHTML = '<tr><td colspan="9" class="text-center text-muted py-3">No purchases yet.</td></tr>';
-          return;
-        }
-        let html = '';
-        inventory.forEach(inv => {
-          const remainingClass = inv.remaining <= 0 ? 'inv-low' : 'inv-ok';
-          html += `<tr>
-            <td>${inv.date}</td>
-            <td>${escapeHtml(inv.material)}</td>
-            <td>${inv.qty}</td>
-            <td>${inv.unit}</td>
-            <td>${formatCurrency(inv.rate)}</td>
-            <td>${formatCurrency(inv.total)}</td>
-            <td>${escapeHtml(inv.supplier || '—')}</td>
-            <td class="${remainingClass} fw-bold">${inv.remaining} ${inv.unit}</td>
-            <td><button class="btn btn-outline-danger btn-sm btn-sm-icon delete-inv" data-id="${inv.id}"><i class="bi bi-trash"></i></button></td>
-          </tr>`;
-        });
-        inventoryTableBody.innerHTML = html;
-        document.querySelectorAll('.delete-inv').forEach(btn => {
-          btn.addEventListener('click', (e) => {
-            const id = Number(btn.dataset.id);
-            if (confirm('Delete this purchase? Inventory will update.')) {
-              inventory = inventory.filter(i => i.id !== id);
-              syncInventoryFromLedger();
-              refreshAll();
-            }
-          });
-        });
-      }
-
-      // FIX: Returns se inventory add-back handle karo (returns array se, masterLedger se nahi)
-      function syncInventoryFromLedger() {
-        // Reset remaining to original purchased qty
-        inventory.forEach(inv => {
-          inv.remaining = inv.qty;
-        });
-
-        // Deduct from sales entries in masterLedger (only non-return entries)
-        masterLedger.forEach(t => {
-          if (t.materialUsed && t.materialUsed !== '' && !t.isReturn) {
-            const matName = t.materialUsed;
-            let needed = t.qty;
-            for (let inv of inventory) {
-              if (inv.material === matName && inv.remaining > 0 && needed > 0) {
-                const deduct = Math.min(inv.remaining, needed);
-                inv.remaining -= deduct;
-                needed -= deduct;
-              }
-            }
-          }
-        });
-
-        // Add back from returns array
-        returns.forEach(r => {
-          if (r.material && r.material !== '') {
-            const matName = r.material;
-            let addBack = r.qty;
-            for (let i = inventory.length - 1; i >= 0 && addBack > 0; i--) {
-              if (inventory[i].material === matName) {
-                inventory[i].remaining += addBack;
-                addBack = 0;
-              }
-            }
-          }
-        });
-      }
-
-      inventoryForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const material = invMaterial.value.trim();
-        if (!material) { alert('Material name required'); return; }
-        const qty = parseFloat(invQty.value) || 0;
-        const rate = parseFloat(invRate.value) || 0;
-        const total = qty * rate;
-        const inv = {
-          id: invId++,
-          material: material,
-          date: invDate.value,
-          qty: qty,
-          unit: invUnit.value,
-          rate: rate,
-          total: total,
-          supplier: invSupplier.value.trim(),
-          remaining: qty
-        };
-        inventory.push(inv);
-        syncInventoryFromLedger();
-        refreshAll();
-        invMaterial.value = '';
-        invQty.value = '1';
-        invRate.value = '0';
-        invTotal.value = 'Rs 0.00';
-        invSupplier.value = '';
-        invDate.value = new Date().toISOString().slice(0,10);
-      });
-
-      invQty.addEventListener('input', () => {
-        const q = parseFloat(invQty.value) || 0;
-        const r = parseFloat(invRate.value) || 0;
-        invTotal.value = formatCurrency(q * r);
-      });
-      invRate.addEventListener('input', () => {
-        const q = parseFloat(invQty.value) || 0;
-        const r = parseFloat(invRate.value) || 0;
-        invTotal.value = formatCurrency(q * r);
-      });
-
-      function populateMaterialSelect() {
-        const materials = [...new Set(inventory.map(i => i.material))];
-        const options = '<option value="">— none —</option>' +
-          materials.map(m => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('');
-        materialUsedSelect.innerHTML = options;
-        returnMaterial.innerHTML = options;
-      }
-
-      // ---------- MASTER LEDGER ----------
-      function computeCustomerRunningBalances() {
-        const customerMap = new Map();
-        masterLedger.forEach(t => {
-          if (!customerMap.has(t.customer)) customerMap.set(t.customer, []);
-          customerMap.get(t.customer).push(t);
-        });
-        for (let [cust, arr] of customerMap.entries()) {
-          arr.sort((a, b) => {
-            if (a.date !== b.date) return a.date.localeCompare(b.date);
-            return a.id - b.id;
-          });
-          let bal = 0;
-          arr.forEach(t => {
-            bal += (t.debit || 0) - (t.credit || 0);
-            t.runningBalance = bal;
-          });
-        }
-        masterLedger.forEach(t => {
-          if (t.runningBalance === undefined) t.runningBalance = 0;
-        });
-      }
-
-      function renderMasterTable() {
-        computeCustomerRunningBalances();
-        const filterText = masterFilter.value.trim().toLowerCase();
-        const filtered = filterText ? masterLedger.filter(t => t.customer.toLowerCase().includes(filterText)) : masterLedger;
-
-        if (filtered.length === 0) {
-          masterTableBody.innerHTML = '';
-          masterEmptyMsg.style.display = 'block';
-          masterCount.textContent = '0 entries';
-          return;
-        }
-        masterEmptyMsg.style.display = 'none';
-
-        const sortedForDisplay = [...filtered].sort((a,b) => {
-          if (a.date !== b.date) return b.date.localeCompare(a.date);
-          return b.id - a.id;
-        });
-
-        let html = '';
-        let totalDebit = 0, totalCredit = 0, totalProfit = 0;
-        sortedForDisplay.forEach(t => {
-          const profit = (t.profitPerUnit || 0) * (t.qty || 0);
-          totalDebit += (t.debit || 0);
-          totalCredit += (t.credit || 0);
-          totalProfit += profit;
-
-          // FIX: Total column — payment entries ke liye "—" dikhao
-          let totalColDisplay = '—';
-          if (t.isReturn) {
-            totalColDisplay = '—';
-          } else if ((t.debit || 0) > 0 && (t.credit || 0) === 0) {
-            totalColDisplay = formatCurrency((t.qty || 0) * (t.rate || 0));
-          } else if ((t.credit || 0) > 0 && (t.debit || 0) === 0) {
-            totalColDisplay = '—';
-          } else if ((t.qty || 0) > 0 && (t.rate || 0) > 0) {
-            totalColDisplay = formatCurrency((t.qty || 0) * (t.rate || 0));
-          }
-
-          let methodBadge = '';
-          if (t.paymentMethod === 'Cash') methodBadge = '<span class="badge badge-cash">Cash</span>';
-          else if (t.paymentMethod === 'Bank') methodBadge = '<span class="badge badge-bank">Bank</span>';
-          else methodBadge = '<span class="badge badge-cheque">Cheque</span>';
-          const balClass = t.runningBalance >= 0 ? 'positive-bal' : 'negative-bal';
-          const materialDisplay = t.materialUsed ? escapeHtml(t.materialUsed) : '—';
-          const returnDisplay = t.isReturn ? `↩ ${t.returnQty || 0}` : '—';
-          html += `<tr data-id="${t.id}">
-            <td class="sticky-col fw-semibold">${escapeHtml(t.customer)}</td>
-            <td>${t.date}</td>
-            <td>${escapeHtml(t.particulars)}</td>
-            <td class="desc-col" title="${escapeHtml(t.description || '')}">${escapeHtml(t.description || '—')}</td>
-            <td>${t.qty}</td>
-            <td>${t.unit}</td>
-            <td>${formatCurrency(t.rate)}</td>
-            <td class="total-col">${totalColDisplay}</td>
-            <td>${formatCurrency(t.debit)}</td>
-            <td>${formatCurrency(t.credit)}</td>
-            <td>${methodBadge}</td>
-            <td>${escapeHtml(t.bankTid || '—')}</td>
-            <td>${materialDisplay}</td>
-            <td>${returnDisplay}</td>
-            <td class="${profit >= 0 ? 'profit-positive' : 'profit-negative'}">${formatCurrency(profit)}</td>
-            <td class="running-balance ${balClass}">${formatCurrency(t.runningBalance)}</td>
-            <td><button class="btn btn-outline-danger btn-sm btn-sm-icon delete-txn" data-id="${t.id}"><i class="bi bi-trash"></i></button></td>
-          </tr>`;
-        });
-
-        html += `<tr class="table-secondary fw-bold" style="border-top: 2px solid #0b1c2f;">
-          <td class="sticky-col">TOTAL</td>
-          <td colspan="6"></td>
-          <td></td>
-          <td>${formatCurrency(totalDebit)}</td>
-          <td>${formatCurrency(totalCredit)}</td>
-          <td colspan="4"></td>
-          <td class="${totalProfit >= 0 ? 'profit-positive' : 'profit-negative'}">${formatCurrency(totalProfit)}</td>
-          <td colspan="2"></td>
-        </tr>`;
-
-        masterTableBody.innerHTML = html;
-        masterCount.textContent = filtered.length + ' entries';
-
-        document.querySelectorAll('.delete-txn').forEach(btn => {
-          btn.addEventListener('click', (e) => {
-            const id = Number(btn.dataset.id);
-            if (confirm('Delete this transaction? Customer ledger & inventory will update.')) {
-              // FIX: Agar return entry hai to Returns Section se bhi delete karo
-              const txn = masterLedger.find(t => t.id === id);
-              if (txn && txn.isReturn && txn.returnId) {
-                returns = returns.filter(r => r.id !== txn.returnId);
-              }
-              masterLedger = masterLedger.filter(t => t.id !== id);
-              syncInventoryFromLedger();
-              refreshAll();
-            }
-          });
-        });
-      }
-
-      function renderReturnsTable() {
-        if (returns.length === 0) {
-          returnsTableBody.innerHTML = '<tr><td colspan="10" class="text-center text-muted py-3">No returns recorded yet.</td></tr>';
-          return;
-        }
-        let html = '';
-        returns.forEach(r => {
-          html += `<tr>
-            <td>${r.date}</td>
-            <td>${escapeHtml(r.customer)}</td>
-            <td>${escapeHtml(r.particulars)}</td>
-            <td>${r.qty}</td>
-            <td>${r.unit}</td>
-            <td>${formatCurrency(r.rate)}</td>
-            <td class="fw-bold text-danger">${formatCurrency(r.amount)}</td>
-            <td>${escapeHtml(r.material || '—')}</td>
-            <td class="desc-col" title="${escapeHtml(r.description || '')}">${escapeHtml(r.description || '—')}</td>
-            <td><button class="btn btn-outline-danger btn-sm btn-sm-icon delete-return" data-id="${r.id}"><i class="bi bi-trash"></i></button></td>
-          </tr>`;
-        });
-        returnsTableBody.innerHTML = html;
-        document.querySelectorAll('.delete-return').forEach(btn => {
-          btn.addEventListener('click', (e) => {
-            const id = Number(btn.dataset.id);
-            if (confirm('Delete this return? Ledger & inventory will be recalculated.')) {
-              returns = returns.filter(r => r.id !== id);
-              masterLedger = masterLedger.filter(t => !(t.isReturn && t.returnId === id));
-              syncInventoryFromLedger();
-              refreshAll();
-            }
-          });
-        });
-      }
-
-      function renderCustomerLedgers() {
-        computeCustomerRunningBalances();
-        const customerMap = new Map();
-        masterLedger.forEach(t => {
-          if (!customerMap.has(t.customer)) customerMap.set(t.customer, []);
-          customerMap.get(t.customer).push({ ...t });
-        });
-
-        if (customerMap.size === 0) {
-          customerLedgersContainer.innerHTML = `<div class="col-12 text-center text-muted py-5 bg-white rounded-4 shadow-sm">No customers yet. Add a transaction in the Master Ledger.</div>`;
-          customerCountBadge.textContent = '0 customers';
-          return;
-        }
-
-        customerCountBadge.textContent = customerMap.size + ' customers';
-        let html = '';
-        const sortedCustomers = Array.from(customerMap.keys()).sort();
-
-        for (let cust of sortedCustomers) {
-          let txns = customerMap.get(cust);
-          txns.sort((a, b) => {
-            if (a.date !== b.date) return a.date.localeCompare(b.date);
-            return a.id - b.id;
-          });
-          let running = 0;
-          txns.forEach(t => {
-            running += (t.debit || 0) - (t.credit || 0);
-            t.runningBalance = running;
-          });
-          const totalOutstanding = running;
-          const outstandingClass = totalOutstanding >= 0 ? 'text-success' : 'text-danger';
-          const profitSum = txns.reduce((acc, t) => acc + ((t.profitPerUnit || 0) * (t.qty || 0)), 0);
-
-          html += `<div class="col-12 col-xl-6">
-            <div class="card shadow-sm border-0 h-100">
-              <div class="card-header customer-ledger-header d-flex justify-content-between align-items-center py-3">
-                <div><i class="bi bi-person-circle me-2"></i><span class="fw-semibold">${escapeHtml(cust)}</span></div>
-                <div><span class="badge bg-light text-dark me-2">Outstanding: <span class="${outstandingClass} fw-bold">${formatCurrency(totalOutstanding)}</span></span>
-                <span class="badge bg-light text-dark">Profit: <span class="profit-positive">${formatCurrency(profitSum)}</span></span></div>
-              </div>
-              <div class="card-body p-0">
-                <div class="table-responsive" style="max-height: 280px; overflow-y: auto;">
-                  <table class="table table-sm table-bordered mb-0 ledger-paper">
-                    <thead class="sticky-top">
-                      <tr><th>Date</th><th>Particulars</th><th>Description</th><th>Qty</th><th>Unit</th><th>Rate</th><th>Total</th><th>Debit</th><th>Credit</th><th>Method</th><th>Bank TID</th><th>Running</th></tr>
-                    </thead>
-                    <tbody>`;
-          txns.forEach(t => {
-            const balClass = t.runningBalance >= 0 ? 'positive-bal' : 'negative-bal';
-            let methodBadge = '';
-            if (t.paymentMethod === 'Cash') methodBadge = '<span class="badge badge-cash">Cash</span>';
-            else if (t.paymentMethod === 'Bank') methodBadge = '<span class="badge badge-bank">Bank</span>';
-            else methodBadge = '<span class="badge badge-cheque">Cheque</span>';
-
-            let totalColDisplay = '—';
-            if (t.isReturn) {
-              totalColDisplay = '—';
-            } else if ((t.debit || 0) > 0 && (t.credit || 0) === 0) {
-              totalColDisplay = formatCurrency((t.qty || 0) * (t.rate || 0));
-            } else if ((t.credit || 0) > 0 && (t.debit || 0) === 0) {
-              totalColDisplay = '—';
-            } else if ((t.qty || 0) > 0 && (t.rate || 0) > 0) {
-              totalColDisplay = formatCurrency((t.qty || 0) * (t.rate || 0));
-            }
-
-            html += `<tr>
-              <td>${t.date}</td>
-              <td>${escapeHtml(t.particulars)}</td>
-              <td class="desc-col" title="${escapeHtml(t.description || '')}">${escapeHtml(t.description || '—')}</td>
-              <td>${t.qty}</td>
-              <td>${t.unit}</td>
-              <td>${formatCurrency(t.rate)}</td>
-              <td class="total-col">${totalColDisplay}</td>
-              <td>${formatCurrency(t.debit)}</td>
-              <td>${formatCurrency(t.credit)}</td>
-              <td>${methodBadge}</td>
-              <td>${escapeHtml(t.bankTid || '—')}</td>
-              <td class="fw-semibold ${balClass}">${formatCurrency(t.runningBalance)}</td>
-            </tr>`;
-          });
-          html += `</tbody></table></div></div></div></div>`;
-        }
-        customerLedgersContainer.innerHTML = html;
-      }
-
-      // FIX: Summary cards — returns ko payments se alag karo
-      function updateSummaryCards() {
-        let totalSales = 0, totalPayments = 0, totalProfit = 0, totalReturns = 0;
-        masterLedger.forEach(t => {
-          if (t.isReturn) {
-            totalReturns += (t.credit || 0);
-          } else {
-            totalSales += (t.debit || 0);
-            totalPayments += (t.credit || 0);
-          }
-          totalProfit += ((t.profitPerUnit || 0) * (t.qty || 0));
-        });
-        const outstanding = totalSales - totalPayments - totalReturns;
-        summarySales.textContent = formatCurrency(totalSales);
-        summaryPayments.textContent = formatCurrency(totalPayments);
-        summaryOutstanding.textContent = formatCurrency(outstanding);
-        summaryProfit.textContent = formatCurrency(totalProfit);
-      }
-
-      function updateCustomerDatalist() {
-        const customers = [...new Set(masterLedger.map(t => t.customer))];
-        customerListDatalist.innerHTML = customers.map(c => `<option value="${escapeHtml(c)}">`).join('');
-      }
-
-      function refreshAll() {
-        renderMasterTable();
-        renderReturnsTable();
-        renderCustomerLedgers();
-        updateSummaryCards();
-        updateCustomerDatalist();
-        populateMaterialSelect();
-        renderInventory();
-      }
-
-      // ---------- EXCEL EXPORT ----------
-      function exportToExcel() {
-        if (masterLedger.length === 0 && inventory.length === 0 && returns.length === 0) {
-          alert('No data to export.');
-          return;
-        }
-        const company = getCompanyName();
-
-        const masterRows = masterLedger.map((t, i) => {
-          let totalCol = 0;
-          if (t.isReturn) {
-            totalCol = 0;
-          } else if ((t.debit || 0) > 0 && (t.credit || 0) === 0) {
-            totalCol = (t.qty || 0) * (t.rate || 0);
-          } else if ((t.credit || 0) > 0 && (t.debit || 0) === 0) {
-            totalCol = 0;
-          } else {
-            totalCol = (t.qty || 0) * (t.rate || 0);
-          }
-          return {
-            'S.No': i + 1,
-            'Customer': t.customer,
-            'Date': t.date,
-            'Particulars': t.particulars,
-            'Description': t.description || '',
-            'Qty': t.qty,
-            'Unit': t.unit,
-            'Rate (Rs)': t.rate,
-            'Total (Rs)': totalCol,
-            'Debit (Rs)': t.debit,
-            'Credit (Rs)': t.credit,
-            'Payment Method': t.paymentMethod,
-            'Bank TID': t.bankTid || '',
-            'Material Used': t.materialUsed || '',
-            'Return Qty': t.returnQty || 0,
-            'Is Return': t.isReturn ? 'Yes' : 'No',
-            'Profit (Rs)': (t.profitPerUnit || 0) * (t.qty || 0),
-            'Running Balance (Rs)': t.runningBalance || 0
-          };
-        });
-
-        const inventoryRows = inventory.map((inv, i) => ({
-          'S.No': i + 1,
-          'Material': inv.material,
-          'Date': inv.date,
-          'Qty Purchased': inv.qty,
-          'Unit': inv.unit,
-          'Rate (Rs)': inv.rate,
-          'Total (Rs)': inv.total,
-          'Supplier': inv.supplier || '',
-          'Remaining': inv.remaining
-        }));
-
-        const returnRows = returns.map((r, i) => ({
-          'S.No': i + 1,
-          'Customer': r.customer,
-          'Date': r.date,
-          'Particulars': r.particulars,
-          'Qty': r.qty,
-          'Unit': r.unit,
-          'Rate (Rs)': r.rate,
-          'Return Amount (Rs)': r.amount,
-          'Material': r.material || '',
-          'Description': r.description || ''
-        }));
-
-        let totalSales = 0, totalPayments = 0, totalProfit = 0, totalReturns = 0;
-        masterLedger.forEach(t => {
-          if (t.isReturn) {
-            totalReturns += (t.credit || 0);
-          } else {
-            totalSales += (t.debit || 0);
-            totalPayments += (t.credit || 0);
-          }
-          totalProfit += ((t.profitPerUnit || 0) * (t.qty || 0));
-        });
-
-        const summaryRows = [
-          { 'Metric': 'Company', 'Value': company },
-          { 'Metric': 'Total Sales (Rs)', 'Value': totalSales },
-          { 'Metric': 'Total Payments Received (Rs)', 'Value': totalPayments },
-          { 'Metric': 'Total Returns (Rs)', 'Value': totalReturns },
-          { 'Metric': 'Outstanding (Rs)', 'Value': totalSales - totalPayments - totalReturns },
-          { 'Metric': 'Total Profit (Rs)', 'Value': totalProfit },
-          { 'Metric': 'Total Transactions', 'Value': masterLedger.length },
-          { 'Metric': 'Total Returns Count', 'Value': returns.length },
-          { 'Metric': 'Export Date', 'Value': new Date().toLocaleString('en-PK') }
-        ];
-
-        const wb = XLSX.utils.book_new();
-        const ws1 = XLSX.utils.json_to_sheet(masterRows);
-        const ws2 = XLSX.utils.json_to_sheet(summaryRows);
-        const ws3 = XLSX.utils.json_to_sheet(inventoryRows);
-        const ws4 = XLSX.utils.json_to_sheet(returnRows);
-
-        ws1['!cols'] = [{ wch: 6 }, { wch: 20 }, { wch: 12 }, { wch: 22 }, { wch: 24 }, { wch: 6 }, { wch: 6 }, { wch: 10 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 10 }, { wch: 16 }, { wch: 16 }, { wch: 10 }, { wch: 10 }, { wch: 12 }, { wch: 16 }];
-        ws2['!cols'] = [{ wch: 30 }, { wch: 24 }];
-        ws3['!cols'] = [{ wch: 6 }, { wch: 20 }, { wch: 12 }, { wch: 14 }, { wch: 8 }, { wch: 10 }, { wch: 12 }, { wch: 18 }, { wch: 12 }];
-        ws4['!cols'] = [{ wch: 6 }, { wch: 20 }, { wch: 12 }, { wch: 22 }, { wch: 6 }, { wch: 6 }, { wch: 10 }, { wch: 16 }, { wch: 16 }, { wch: 24 }];
-
-        XLSX.utils.book_append_sheet(wb, ws1, 'Master Ledger');
-        XLSX.utils.book_append_sheet(wb, ws2, 'Summary');
-        XLSX.utils.book_append_sheet(wb, ws3, 'Inventory');
-        XLSX.utils.book_append_sheet(wb, ws4, 'Returns');
-
-        const fileName = company.replace(/\s+/g, '_') + '_Ledger_' + new Date().toISOString().slice(0,10) + '.xlsx';
-        XLSX.writeFile(wb, fileName);
-      }
-
-      // ---------- EVENTS ----------
-      masterForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const customer = document.getElementById('customerName').value.trim();
-        if (!customer) { alert('Customer name is required'); return; }
-        const isReturnVal = isReturnCheck.checked;
-        const returnQtyVal = parseFloat(returnQtyInput.value) || 0;
-
-        const txn = {
-          id: currentId++,
-          customer: customer,
-          date: document.getElementById('txnDate').value,
-          particulars: document.getElementById('particulars').value.trim(),
-          description: document.getElementById('description').value.trim(),
-          qty: parseFloat(document.getElementById('qty').value) || 0,
-          unit: document.getElementById('unit').value,
-          rate: parseFloat(document.getElementById('rate').value) || 0,
-          profitPerUnit: parseFloat(document.getElementById('profitPerUnit').value) || 0,
-          debit: parseFloat(document.getElementById('debit').value) || 0,
-          credit: parseFloat(document.getElementById('credit').value) || 0,
-          paymentMethod: document.getElementById('paymentMethod').value,
-          bankTid: document.getElementById('bankTid').value.trim(),
-          materialUsed: materialUsedSelect.value,
-          returnQty: returnQtyVal,
-          isReturn: isReturnVal,
-          runningBalance: 0
-        };
-
-        if (txn.debit === 0 && txn.credit === 0 && txn.qty > 0 && txn.rate > 0 && !txn.isReturn) {
-          if (confirm('Debit is 0. Set debit to Qty × Rate = ' + formatCurrency(txn.qty * txn.rate) + '?')) {
-            txn.debit = txn.qty * txn.rate;
-          }
-        }
-
-        masterLedger.push(txn);
-        syncInventoryFromLedger();
-        refreshAll();
-
-        document.getElementById('customerName').value = '';
-        document.getElementById('particulars').value = '';
-        document.getElementById('description').value = '';
-        document.getElementById('qty').value = '1';
-        document.getElementById('rate').value = '0';
-        document.getElementById('profitPerUnit').value = '0';
-        document.getElementById('debit').value = '0';
-        document.getElementById('credit').value = '0';
-        document.getElementById('bankTid').value = '';
-        document.getElementById('paymentMethod').value = 'Cash';
-        document.getElementById('txnDate').value = new Date().toISOString().slice(0,10);
-        materialUsedSelect.value = '';
-        returnQtyInput.value = '0';
-        isReturnCheck.checked = false;
-      });
-
-      // ---------- RETURNS SUBMIT ----------
-      returnsForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const customer = returnCustomer.value.trim();
-        if (!customer) { alert('Customer name is required'); return; }
-        const qty = parseFloat(returnQtyInputEl.value) || 0;
-        const rate = parseFloat(returnRate.value) || 0;
-        const amount = qty * rate;
-        if (amount <= 0) { alert('Return amount must be greater than 0'); return; }
-
-        const ret = {
-          id: returnId++,
-          customer: customer,
-          date: returnDate.value,
-          particulars: returnParticulars.value.trim(),
-          qty: qty,
-          unit: returnUnit.value,
-          rate: rate,
-          amount: amount,
-          material: returnMaterial.value,
-          description: returnDescription.value.trim()
-        };
-        returns.push(ret);
-
-        // Master Ledger me credit entry banao (balance kam karne ke liye)
-        const masterReturnEntry = {
-          id: currentId++,
-          customer: customer,
-          date: returnDate.value,
-          particulars: 'RETURN: ' + ret.particulars,
-          description: ret.description || 'Product return',
-          qty: qty,
-          unit: returnUnit.value,
-          rate: rate,
-          profitPerUnit: 0,
-          debit: 0,
-          credit: amount,
-          paymentMethod: 'Cash',
-          bankTid: '',
-          materialUsed: ret.material,
-          returnQty: qty,
-          isReturn: true,
-          returnId: ret.id,
-          runningBalance: 0
-        };
-        masterLedger.push(masterReturnEntry);
-
-        syncInventoryFromLedger();
-        refreshAll();
-
-        returnCustomer.value = '';
-        returnParticulars.value = '';
-        returnQtyInputEl.value = '1';
-        returnRate.value = '0';
-        returnAmount.value = 'Rs 0.00';
-        returnMaterial.value = '';
-        returnDescription.value = '';
-        returnDate.value = new Date().toISOString().slice(0,10);
-      });
-
-      document.getElementById('clearFormBtn').addEventListener('click', () => {
-        document.getElementById('customerName').value = '';
-        document.getElementById('particulars').value = '';
-        document.getElementById('description').value = '';
-        document.getElementById('qty').value = '1';
-        document.getElementById('rate').value = '0';
-        document.getElementById('profitPerUnit').value = '0';
-        document.getElementById('debit').value = '0';
-        document.getElementById('credit').value = '0';
-        document.getElementById('bankTid').value = '';
-        document.getElementById('paymentMethod').value = 'Cash';
-        document.getElementById('txnDate').value = new Date().toISOString().slice(0,10);
-        materialUsedSelect.value = '';
-        returnQtyInput.value = '0';
-        isReturnCheck.checked = false;
-      });
-
-      masterFilter.addEventListener('input', () => renderMasterTable());
-
-      document.getElementById('resetMasterBtn').addEventListener('click', () => {
-        if (confirm('Delete all transactions, inventory and returns? This cannot be undone.')) {
-          masterLedger = [];
-          inventory = [];
-          returns = [];
-          currentId = 1;
-          invId = 1;
-          returnId = 1;
-          refreshAll();
-        }
-      });
-
-      document.getElementById('exportExcelBtn').addEventListener('click', exportToExcel);
-
-      document.getElementById('txnDate').value = new Date().toISOString().slice(0,10);
-      invDate.value = new Date().toISOString().slice(0,10);
-      returnDate.value = new Date().toISOString().slice(0,10);
-
-      // ---------- SEED ----------
-      function seedData() {
-        const today = new Date().toISOString().slice(0,10);
-        inventory = [
-          { id: 1, material: 'Rivet Big', date: today, qty: 500, unit: 'Kg', rate: 560, total: 280000, supplier: 'MetalCo', remaining: 500 }
-        ];
-        masterLedger = [
-          { 
-            id: 1, 
-            customer: 'GM Industry', 
-            date: today, 
-            particulars: 'Rivet Big 100Kg', 
-            description: 'Sold to GM', 
-            qty: 100, 
-            unit: 'Kg', 
-            rate: 570, 
-            profitPerUnit: 10, 
-            debit: 57000, 
-            credit: 0, 
-            paymentMethod: 'Cash', 
-            bankTid: '', 
-            materialUsed: 'Rivet Big',
-            returnQty: 0,
-            isReturn: false,
-            runningBalance: 0 
-          }
-        ];
-        currentId = 2;
-        invId = 2;
-        returnId = 1;
-        syncInventoryFromLedger();
-        refreshAll();
-      }
-
-      seedData();
-
-      window.addEventListener('load', () => {
-        const loader = document.getElementById('loader-wrapper');
-        setTimeout(() => {
-          loader.classList.add('hidden');
-        }, 9000);
-      });
-    })();
-  </script>
+ </div>
+
+ <!-- MASTER FORM -->
+ <div class="sec mb-4" style="animation-delay:.15s">
+  <div class="sec-h"><span class="ico"><i class="bi bi-pencil-square"></i></span><h5>Master Ledger · New Transaction</h5><span class="badge bg-light text-dark">Credit = customer purchase · Debit = payment/advance</span></div>
+  <div class="p-3">
+   <form id="mForm" class="row g-2 align-items-end">
+    <div class="col-12 col-sm-6 col-lg-3"><label class="form-label">Customer</label><input class="form-control form-control-sm" id="cust" list="custList" placeholder="e.g. GM Industry" required><datalist id="custList"></datalist></div>
+    <div class="col-6 col-lg-2"><label class="form-label">Date</label><input type="date" class="form-control form-control-sm" id="tDate" required></div>
+    <div class="col-6 col-lg-3"><label class="form-label">Particulars</label><input class="form-control form-control-sm" id="part" placeholder="Rivet Big 151kg" required></div>
+    <div class="col-12 col-lg-4"><label class="form-label">Description (extra)</label><input class="form-control form-control-sm" id="desc" placeholder="Optional details..."></div>
+    <div class="col-4 col-sm-2 col-lg-1"><label class="form-label">Qty / Kg</label><input type="number" step="any" min="0" class="form-control form-control-sm" id="qty" value="1"></div>
+    <div class="col-4 col-sm-2 col-lg-1"><label class="form-label">Unit</label><select class="form-select form-select-sm" id="unit"><option>Kg</option><option>Piece</option></select></div>
+    <div class="col-4 col-sm-2 col-lg-1"><label class="form-label">Rate</label><input type="number" step="0.01" min="0" class="form-control form-control-sm" id="rate" value="0"></div>
+    <div class="col-6 col-sm-3 col-lg-2"><label class="form-label">Total (auto)</label><input class="form-control form-control-sm auto" id="total" readonly value="Rs 0.00"></div>
+    <div class="col-6 col-sm-3 col-lg-1"><label class="form-label">Profit/unit</label><input type="number" step="0.01" class="form-control form-control-sm" id="ppu" value="0"></div>
+    <div class="col-6 col-sm-3 col-lg-2"><label class="form-label">Credit (Purchase)</label><input type="number" step="0.01" min="0" class="form-control form-control-sm" id="credit" value="0"></div>
+    <div class="col-6 col-sm-3 col-lg-2"><label class="form-label">Debit (Payment/Advance)</label><input type="number" step="0.01" min="0" class="form-control form-control-sm" id="debit" value="0"></div>
+    <div class="col-6 col-sm-4 col-lg-2"><label class="form-label">Method</label><select class="form-select form-select-sm" id="method"><option>Cash</option><option>Bank</option><option>Cheque</option></select></div>
+    <div class="col-6 col-sm-4 col-lg-3"><label class="form-label">Bank TID / Cheque #</label><input class="form-control form-control-sm" id="tid" placeholder="Txn ID / Cheque"></div>
+    <div class="col-12 col-sm-4 col-lg-3"><label class="form-label">Material Used (from inventory)</label><select class="form-select form-select-sm" id="matUsed"><option value="">— none —</option></select></div>
+    <div class="col-12 d-flex justify-content-end gap-2 mt-2">
+     <button type="button" class="btn btn-outline-secondary btn-sm" id="clearBtn"><i class="bi bi-eraser"></i> Clear</button>
+     <button class="btn btn-pri btn-sm px-4"><i class="bi bi-plus-circle"></i> Add to Master Ledger</button>
+    </div>
+   </form>
+   <div class="hint mt-2"><i class="bi bi-info-circle"></i> Total = Qty × Rate (works for Kg and Piece). Credit auto-fills with Total (you can edit it). Running Balance = Previous + Credit − Debit. Example: Credit 200,000 and Debit 50,000 → Balance 150,000.</div>
+  </div>
+ </div>
+
+ <!-- RETURNED FINISHED PRODUCTS -->
+ <div class="sec mb-4" style="animation-delay:.2s;border-left:5px solid var(--warn)">
+  <div class="sec-h" style="background:#fffbeb"><span class="ico o"><i class="bi bi-arrow-return-left"></i></span><h5>Returned Finished Products</h5><span class="badge b-ret">Separate from raw material · auto-reduces customer balance</span></div>
+  <div class="p-3">
+   <form id="rForm" class="row g-2 align-items-end">
+    <div class="col-12 col-sm-6 col-lg-3"><label class="form-label">Customer</label><input class="form-control form-control-sm" id="rCust" list="custList" placeholder="Select or type customer" required></div>
+    <div class="col-6 col-lg-2"><label class="form-label">Return Date</label><input type="date" class="form-control form-control-sm" id="rDate" required></div>
+    <div class="col-12 col-sm-6 col-lg-3"><label class="form-label">Finished Product</label><input class="form-control form-control-sm" id="rPart" placeholder="e.g. Rivet Big" required></div>
+    <div class="col-12 col-sm-6 col-lg-4"><label class="form-label">Description</label><input class="form-control form-control-sm" id="rDesc" placeholder="Optional details..."></div>
+    <div class="col-4 col-sm-3 col-lg-2"><label class="form-label">Qty / Kg</label><input type="number" step="any" min="0" class="form-control form-control-sm" id="rQty" value="1" required></div>
+    <div class="col-4 col-sm-3 col-lg-2"><label class="form-label">Unit</label><select class="form-select form-select-sm" id="rUnit"><option>Kg</option><option>Piece</option></select></div>
+    <div class="col-4 col-sm-3 col-lg-2"><label class="form-label">Rate</label><input type="number" step="0.01" min="0" class="form-control form-control-sm" id="rRate" value="0" required></div>
+    <div class="col-6 col-sm-3 col-lg-3"><label class="form-label">Total (auto)</label><input class="form-control form-control-sm auto" id="rTotal" readonly value="Rs 0.00"></div>
+    <div class="col-6 col-lg-3"><button class="btn btn-warning btn-sm w-100 fw-semibold"><i class="bi bi-arrow-return-left"></i> Submit Return</button></div>
+   </form>
+   <div class="hint mt-2"><i class="bi bi-info-circle"></i> One submit = one stock record here + one ledger deduction (no duplicates). Raw material inventory is not changed.</div>
+
+   <h6 class="fw-bold mt-4 mb-2"><i class="bi bi-boxes text-warning"></i> Returned Stock Available</h6>
+   <div class="row g-2" id="stockCards"></div>
+
+   <h6 class="fw-bold mt-4 mb-2"><i class="bi bi-clock-history text-warning"></i> Return History</h6>
+   <div class="tw" style="max-height:230px"><table class="table table-sm table-bordered table-hover"><thead><tr><th>Date</th><th>Customer</th><th>Product</th><th>Qty</th><th>Unit</th><th>Rate</th><th>Total</th><th>Description</th><th></th></tr></thead><tbody id="retBody"></tbody></table></div>
+  </div>
+ </div>
+
+ <!-- MASTER LEDGER -->
+ <div class="sec mb-4" style="animation-delay:.25s">
+  <div class="sec-h"><span class="ico g"><i class="bi bi-table"></i></span><h5>Master Ledger</h5><span class="badge bg-secondary" id="mCount">0 entries</span>
+   <div class="ms-auto d-flex gap-2 flex-grow-1 flex-sm-grow-0">
+    <input class="form-control form-control-sm" placeholder="Filter by customer..." id="mFilter" style="min-width:140px">
+    <button class="btn btn-outline-danger btn-sm" id="resetBtn"><i class="bi bi-arrow-counterclockwise"></i><span class="d-none d-sm-inline"> Reset</span></button>
+   </div></div>
+  <div class="tw" style="max-height:440px"><table class="table table-hover table-bordered">
+   <thead><tr><th>Customer</th><th>Date</th><th>Particulars</th><th>Description</th><th>Qty</th><th>Unit</th><th>Rate</th><th>Total</th><th>Debit</th><th>Credit</th><th>Method</th><th>Bank TID</th><th>Material Used</th><th>Profit</th><th>Running Bal</th><th></th></tr></thead>
+   <tbody id="mBody"></tbody></table></div>
+  <div class="empty" id="mEmpty">No transactions yet. Add one above.</div>
+ </div>
+
+ <div class="d-flex align-items-center gap-2 mb-3"><span class="ico"><i class="bi bi-people-fill"></i></span><h4 class="mb-0 fw-bold">Customer Ledgers</h4><span class="badge bg-light text-dark" id="cCount">0 customers</span></div>
+ <div id="cLedgers" class="row g-4"></div>
+</div>
+
+<footer class="text-center mt-5"><span>Development by Syed Ghina Ul Hassan · Ledger Accounting System</span></footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const KEY='sguh_ledger_v2';
+let ledger=[],inv=[],returns=[],ids={t:1,i:1,r:1};
+
+const num=v=>{const n=parseFloat(v);return isFinite(n)?n:0};
+const r2=n=>Math.round((n+Number.EPSILON)*100)/100;
+const money=n=>'Rs '+num(n).toLocaleString('en-PK',{minimumFractionDigits:2,maximumFractionDigits:2});
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const today=()=>new Date(Date.now()-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10);
+const company=()=>$('companyName').value.trim()||'Syed Ghina Ul Hassan';
+const key=s=>String(s).trim().toLowerCase();
+
+/* ---------- storage ---------- */
+function save(){try{localStorage.setItem(KEY,JSON.stringify({ledger,inv,returns,ids,company:$('companyName').value}))}catch(e){}}
+function load(){try{const d=JSON.parse(localStorage.getItem(KEY)||'null');if(!d)return false;
+ ledger=d.ledger||[];inv=d.inv||[];returns=d.returns||[];ids=d.ids||ids;if(d.company)$('companyName').value=d.company;return true}catch(e){return false}}
+
+/* ---------- helpers ---------- */
+function canonCustomer(name){const n=name.trim();const f=ledger.find(t=>key(t.customer)===key(n));return f?f.customer:n}
+function rowTotal(t){return r2(num(t.qty)*num(t.rate))}
+
+// raw-material stock only (returns are NOT included)
+function syncInventory(){
+ inv.forEach(i=>i.remaining=i.qty);
+ ledger.forEach(t=>{
+  if(t.isReturn||!t.materialUsed)return;
+  let need=num(t.qty);
+  for(const i of inv){if(i.material===t.materialUsed&&i.remaining>0&&need>0){const d=Math.min(i.remaining,need);i.remaining=r2(i.remaining-d);need=r2(need-d)}}
+ });
+}
+// Running Balance = previous + Credit - Debit (per customer)
+function groups(){
+ const m=new Map();
+ ledger.forEach(t=>{const k=key(t.customer);if(!m.has(k))m.set(k,{name:t.customer,rows:[]});m.get(k).rows.push(t)});
+ m.forEach(g=>{g.rows.sort((a,b)=>a.date===b.date?a.id-b.id:a.date.localeCompare(b.date));
+  let bal=0;g.rows.forEach(t=>{bal=r2(bal+num(t.credit)-num(t.debit));t.runningBalance=bal});g.balance=bal});
+ return m;
+}
+const methodBadge=t=>t.isReturn?'<span class="bd b-ret">Return</span>':(num(t.debit)>0?`<span class="bd b-${t.paymentMethod.toLowerCase()}">${esc(t.paymentMethod)}</span>`:'—');
+const balCls=b=>b>0?'pos':'neg';
+const profitOf=t=>t.isReturn?0:num(t.profitPerUnit)*num(t.qty);
+
+/* ---------- live totals ---------- */
+function calcMaster(){const tot=r2(num($('qty').value)*num($('rate').value));$('total').value=money(tot);
+ if(!$('credit').dataset.manual)$('credit').value=tot>0?tot.toFixed(2):'0'}
+$('qty').addEventListener('input',calcMaster);$('rate').addEventListener('input',calcMaster);
+$('credit').addEventListener('input',e=>{if(e.target.value==='')delete e.target.dataset.manual;else e.target.dataset.manual='1'});
+const calcRet=()=>$('rTotal').value=money(num($('rQty').value)*num($('rRate').value));
+$('rQty').addEventListener('input',calcRet);$('rRate').addEventListener('input',calcRet);
+const calcInv=()=>$('iTotal').value=money(num($('iQty').value)*num($('iRate').value));
+$('iQty').addEventListener('input',calcInv);$('iRate').addEventListener('input',calcInv);
+
+/* ---------- render ---------- */
+function renderInv(){
+ $('invBody').innerHTML=inv.length?inv.map(i=>`<tr><td>${i.date}</td><td>${esc(i.material)}</td><td>${i.qty}</td><td>${i.unit}</td><td>${money(i.rate)}</td><td>${money(i.total)}</td><td>${esc(i.supplier||'—')}</td><td><span class="bd ${i.remaining<=0?'low':'okk'}">${i.remaining} ${i.unit}</span></td><td><button class="btn btn-outline-danger mini" data-act="delInv" data-id="${i.id}"><i class="bi bi-trash"></i></button></td></tr>`).join(''):'<tr><td colspan="9" class="empty">No purchases yet.</td></tr>';
+}
+function renderMaster(){
+ const f=key($('mFilter').value);
+ const rows=ledger.filter(t=>!f||key(t.customer).includes(f)).sort((a,b)=>a.date===b.date?b.id-a.id:b.date.localeCompare(a.date));
+ $('mCount').textContent=rows.length+' entries';
+ $('mEmpty').style.display=rows.length?'none':'block';
+ let d=0,c=0,p=0;
+ let h=rows.map(t=>{d+=num(t.debit);c+=num(t.credit);const pr=profitOf(t);p+=pr;
+  return `<tr><td class="fw-semibold">${esc(t.customer)}</td><td>${t.date}</td><td>${esc(t.particulars)}</td><td title="${esc(t.description)}" style="max-width:140px;overflow:hidden;text-overflow:ellipsis">${esc(t.description||'—')}</td><td>${t.qty}</td><td>${t.unit}</td><td>${money(t.rate)}</td><td class="tcol">${money(rowTotal(t))}</td><td>${money(t.debit)}</td><td>${money(t.credit)}</td><td>${methodBadge(t)}</td><td>${esc(t.bankTid||'—')}</td><td>${esc(t.materialUsed||'—')}</td><td class="${pr>=0?'pp':'pn'}">${money(pr)}</td><td class="${balCls(t.runningBalance)}">${money(t.runningBalance)}</td><td><button class="btn btn-outline-danger mini" data-act="delTxn" data-id="${t.id}"><i class="bi bi-trash"></i></button></td></tr>`}).join('');
+ if(rows.length)h+=`<tr class="table-secondary fw-bold"><td>TOTAL</td><td colspan="7"></td><td>${money(d)}</td><td>${money(c)}</td><td colspan="3"></td><td>${money(p)}</td><td colspan="2"></td></tr>`;
+ $('mBody').innerHTML=h;
+}
+function renderReturns(){
+ const st=new Map();
+ returns.forEach(r=>{const k=key(r.particulars)+'|'+r.unit;if(!st.has(k))st.set(k,{name:r.particulars,unit:r.unit,qty:0,amt:0,n:0});const s=st.get(k);s.qty=r2(s.qty+r.qty);s.amt=r2(s.amt+r.amount);s.n++});
+ $('stockCards').innerHTML=st.size?[...st.values()].map(s=>`<div class="col-6 col-md-4 col-xl-3"><div class="stk"><div class="small fw-semibold text-truncate">${esc(s.name)}</div><b>${s.qty} ${s.unit}</b><div class="hint">Value ${money(s.amt)} · ${s.n} return${s.n>1?'s':''}</div></div></div>`).join(''):'<div class="col-12 empty">No returned finished products yet.</div>';
+ $('retBody').innerHTML=returns.length?[...returns].reverse().map(r=>`<tr><td>${r.date}</td><td>${esc(r.customer)}</td><td>${esc(r.particulars)}</td><td>${r.qty}</td><td>${r.unit}</td><td>${money(r.rate)}</td><td class="tcol">${money(r.amount)}</td><td>${esc(r.description||'—')}</td><td><button class="btn btn-outline-danger mini" data-act="delRet" data-id="${r.id}"><i class="bi bi-trash"></i></button></td></tr>`).join(''):'<tr><td colspan="9" class="empty">No returns recorded yet.</td></tr>';
+}
+function renderCustomers(){
+ const m=groups();
+ $('cCount').textContent=m.size+' customers';
+ if(!m.size){$('cLedgers').innerHTML='<div class="col-12"><div class="sec empty">No customers yet. Add a transaction in the Master Ledger.</div></div>';return}
+ $('cLedgers').innerHTML=[...m.values()].sort((a,b)=>a.name.localeCompare(b.name)).map((g,idx)=>{
+  const profit=g.rows.reduce((a,t)=>a+profitOf(t),0);
+  const body=g.rows.map(t=>`<tr><td>${t.date}</td><td>${esc(t.particulars)}</td><td>${t.qty}</td><td>${t.unit}</td><td>${money(t.rate)}</td><td class="tcol">${money(rowTotal(t))}</td><td>${money(t.debit)}</td><td>${money(t.credit)}</td><td>${methodBadge(t)}</td><td class="fw-bold ${balCls(t.runningBalance)}">${money(t.runningBalance)}</td></tr>`).join('');
+  return `<div class="col-12 col-xl-6"><div class="sec h-100" style="animation-delay:${Math.min(idx,8)*.06}s"><div class="cl-h d-flex flex-wrap justify-content-between align-items-center gap-2 p-3"><span class="fw-semibold"><i class="bi bi-person-circle me-2"></i>${esc(g.name)}</span><span><span class="badge bg-light text-dark me-1">Outstanding: <b class="${balCls(g.balance)}">${money(g.balance)}</b></span><span class="badge bg-light text-dark">Profit: <b class="pp">${money(profit)}</b></span></span></div><div class="tw" style="max-height:300px"><table class="table table-sm table-bordered ledger-paper"><thead><tr><th>Date</th><th>Particulars</th><th>Qty</th><th>Unit</th><th>Rate</th><th>Total</th><th>Debit</th><th>Credit</th><th>Method</th><th>Running</th></tr></thead><tbody>${body}</tbody></table></div></div></div>`}).join('');
+}
+function summary(){
+ let s=0,p=0,r=0,pf=0;
+ ledger.forEach(t=>{if(t.isReturn)r+=num(t.debit);else{s+=num(t.credit);p+=num(t.debit)}pf+=profitOf(t)});
+ return {s,p,r,o:r2(s-p-r),pf};
+}
+const animated={};
+function anim(el,to){const from=animated[el.id]||0;animated[el.id]=to;const t0=performance.now();
+ (function step(t){const k=Math.min(1,(t-t0)/500);el.textContent=money(from+(to-from)*k);if(k<1)requestAnimationFrame(step)})(t0)}
+function renderSummary(){const x=summary();anim($('sSales'),x.s);anim($('sPay'),x.p);anim($('sRet'),x.r);anim($('sOut'),x.o);anim($('sProfit'),x.pf)}
+function renderLists(){
+ const names=[...new Map(ledger.map(t=>[key(t.customer),t.customer])).values()];
+ $('custList').innerHTML=names.map(c=>`<option value="${esc(c)}">`).join('');
+ const mats=[...new Set(inv.map(i=>i.material))],cur=$('matUsed').value;
+ $('matUsed').innerHTML='<option value="">— none —</option>'+mats.map(m=>`<option value="${esc(m)}">${esc(m)}</option>`).join('');
+ if(mats.includes(cur))$('matUsed').value=cur;
+}
+function refresh(){syncInventory();renderInv();renderMaster();renderReturns();renderCustomers();renderSummary();renderLists();save()}
+
+/* ---------- actions ---------- */
+function deleteReturn(id){returns=returns.filter(r=>r.id!==id);ledger=ledger.filter(t=>!(t.isReturn&&t.returnId===id))}
+document.addEventListener('click',e=>{
+ const b=e.target.closest('[data-act]');if(!b)return;
+ const id=Number(b.dataset.id),a=b.dataset.act;
+ if(a==='delInv'&&confirm('Delete this purchase?')){inv=inv.filter(i=>i.id!==id);refresh()}
+ if(a==='delTxn'){const t=ledger.find(x=>x.id===id);if(!t)return;
+  if(confirm(t.isReturn?'Delete this return? It will be removed from Returned Products and the ledger.':'Delete this transaction?')){
+   if(t.isReturn)deleteReturn(t.returnId);else ledger=ledger.filter(x=>x.id!==id);refresh()}}
+ if(a==='delRet'&&confirm('Delete this return? Ledger balance will be restored.')){deleteReturn(id);refresh()}
+});
+
+$('invForm').addEventListener('submit',e=>{e.preventDefault();
+ const material=$('iMat').value.trim();if(!material)return alert('Material name required');
+ const qty=num($('iQty').value),rate=num($('iRate').value);
+ if(qty<=0)return alert('Quantity must be greater than 0');
+ inv.push({id:ids.i++,material,date:$('iDate').value,qty,unit:$('iUnit').value,rate,total:r2(qty*rate),supplier:$('iSup').value.trim(),remaining:qty});
+ $('iMat').value='';$('iQty').value='1';$('iRate').value='0';$('iSup').value='';calcInv();refresh();
+});
+
+function clearMaster(){
+ ['cust','part','desc','tid'].forEach(i=>$(i).value='');
+ $('qty').value='1';$('rate').value='0';$('ppu').value='0';$('debit').value='0';$('credit').value='0';
+ delete $('credit').dataset.manual;$('method').value='Cash';$('matUsed').value='';$('tDate').value=today();calcMaster();
+}
+$('clearBtn').addEventListener('click',clearMaster);
+
+$('mForm').addEventListener('submit',e=>{e.preventDefault();
+ const customer=canonCustomer($('cust').value);if(!customer)return alert('Customer name is required');
+ const t={id:ids.t++,customer,date:$('tDate').value,particulars:$('part').value.trim(),description:$('desc').value.trim(),
+  qty:num($('qty').value),unit:$('unit').value,rate:num($('rate').value),profitPerUnit:num($('ppu').value),
+  debit:r2(num($('debit').value)),credit:r2(num($('credit').value)),paymentMethod:$('method').value,bankTid:$('tid').value.trim(),
+  materialUsed:$('matUsed').value,isReturn:false,runningBalance:0};
+ if(t.debit<0||t.credit<0||t.qty<0||t.rate<0){ids.t--;return alert('Negative values are not allowed')}
+ if(t.debit===0&&t.credit===0){ids.t--;return alert('Enter Credit (purchase) or Debit (payment/advance)')}
+ ledger.push(t);refresh();clearMaster();
+});
+
+// ONE submit = one return record + one ledger debit (no duplicate adjustment)
+$('rForm').addEventListener('submit',e=>{e.preventDefault();
+ const customer=canonCustomer($('rCust').value);if(!customer)return alert('Customer name is required');
+ const particulars=$('rPart').value.trim(),qty=num($('rQty').value),rate=num($('rRate').value),amount=r2(qty*rate);
+ if(qty<=0)return alert('Quantity must be greater than 0');
+ if(amount<=0)return alert('Return amount must be greater than 0');
+ const rid=ids.r++,date=$('rDate').value,unit=$('rUnit').value,description=$('rDesc').value.trim();
+ returns.push({id:rid,customer,date,particulars,qty,unit,rate,amount,description});
+ ledger.push({id:ids.t++,customer,date,particulars:'RETURN: '+particulars,description:description||'Product return',qty,unit,rate,profitPerUnit:0,debit:amount,credit:0,paymentMethod:'Cash',bankTid:'',materialUsed:'',isReturn:true,returnId:rid,runningBalance:0});
+ ['rCust','rPart','rDesc'].forEach(i=>$(i).value='');$('rQty').value='1';$('rRate').value='0';$('rDate').value=today();calcRet();refresh();
+});
+
+$('mFilter').addEventListener('input',renderMaster);
+$('companyName').addEventListener('input',save);
+$('resetBtn').addEventListener('click',()=>{if(confirm('Delete ALL transactions, inventory and returns? This cannot be undone.')){ledger=[];inv=[];returns=[];ids={t:1,i:1,r:1};refresh()}});
+
+/* ---------- export ---------- */
+$('exportBtn').addEventListener('click',()=>{
+ if(!ledger.length&&!inv.length&&!returns.length)return alert('No data to export.');
+ if(typeof XLSX==='undefined')return alert('Excel library failed to load. Check internet connection.');
+ groups();const x=summary();
+ const wb=XLSX.utils.book_new();
+ const add=(rows,n)=>XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows.length?rows:[{}]),n);
+ add(ledger.map((t,i)=>({'S.No':i+1,Customer:t.customer,Date:t.date,Particulars:t.particulars,Description:t.description||'',Qty:t.qty,Unit:t.unit,'Rate (Rs)':t.rate,'Total (Rs)':rowTotal(t),'Debit (Rs)':t.debit,'Credit (Rs)':t.credit,Method:t.isReturn?'Return':t.paymentMethod,'Bank TID':t.bankTid||'','Material Used':t.materialUsed||'','Profit (Rs)':profitOf(t),'Running Balance (Rs)':t.runningBalance})),'Master Ledger');
+ add([{Metric:'Company',Value:company()},{Metric:'Total Sales (Rs)',Value:x.s},{Metric:'Payments Received (Rs)',Value:x.p},{Metric:'Returns (Rs)',Value:x.r},{Metric:'Outstanding (Rs)',Value:x.o},{Metric:'Total Profit (Rs)',Value:x.pf},{Metric:'Export Date',Value:new Date().toLocaleString('en-PK')}],'Summary');
+ add(inv.map((i,n)=>({'S.No':n+1,Material:i.material,Date:i.date,Qty:i.qty,Unit:i.unit,'Rate (Rs)':i.rate,'Total (Rs)':i.total,Supplier:i.supplier||'',Remaining:i.remaining})),'Raw Inventory');
+ const st=new Map();returns.forEach(r=>{const k=key(r.particulars)+'|'+r.unit;if(!st.has(k))st.set(k,{Product:r.particulars,Unit:r.unit,'Qty Available':0,'Value (Rs)':0});const s=st.get(k);s['Qty Available']=r2(s['Qty Available']+r.qty);s['Value (Rs)']=r2(s['Value (Rs)']+r.amount)});
+ add([...st.values()],'Returned Stock');
+ add(returns.map((r,i)=>({'S.No':i+1,Customer:r.customer,Date:r.date,Product:r.particulars,Qty:r.qty,Unit:r.unit,'Rate (Rs)':r.rate,'Total (Rs)':r.amount,Description:r.description||''})),'Return History');
+ XLSX.writeFile(wb,company().replace(/\s+/g,'_')+'_Ledger_'+today()+'.xlsx');
+});
+
+/* ---------- init ---------- */
+['tDate','iDate','rDate'].forEach(i=>$(i).value=today());
+if(!load()){
+ inv=[{id:1,material:'Rivet Big',date:today(),qty:500,unit:'Kg',rate:560,total:280000,supplier:'MetalCo',remaining:500}];
+ ledger=[{id:1,customer:'GM Industry',date:today(),particulars:'Rivet Big 100Kg',description:'Sold to GM',qty:100,unit:'Kg',rate:570,profitPerUnit:10,debit:0,credit:57000,paymentMethod:'Cash',bankTid:'',materialUsed:'Rivet Big',isReturn:false,runningBalance:0}];
+ ids={t:2,i:2,r:1};
+}
+calcMaster();calcRet();calcInv();refresh();
+window.addEventListener('load',()=>setTimeout(()=>$('loader').classList.add('hide'),1200));
+})();
+</script>
 </body>
 </html>
